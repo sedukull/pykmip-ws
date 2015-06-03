@@ -1,10 +1,10 @@
 
-DROP DATABASE IF EXISTS `kis`;
-DROP TABLE IF EXISTS `kis`.`app_users`;
+DROP DATABASE IF EXISTS `kmis`;
+DROP TABLE IF EXISTS `kmis`.`app_users`;
 
-CREATE DATABASE `kis`;
+CREATE DATABASE `kmis`;
 
-CREATE TABLE `kis`.`app_users`
+CREATE TABLE `kmis`.`app_users`
 (
    `app_user_id` INT NOT NULL AUTO_INCREMENT,
    `app_key` varchar(128) NOT NULL,
@@ -17,3 +17,9 @@ CREATE TABLE `kis`.`app_users`
    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
    PRIMARY KEY ( app_user_id,app_key )
 );
+
+CREATE USER 'kmis_db_user'@'localhost' IDENTIFIED BY 'UnDetect@ble123!';
+
+GRANT ALL PRIVILEGES ON 'kmis' . * TO 'kmis_db_user'@'UnDetect@ble123!';
+
+FLUSH PRIVILEGES;
