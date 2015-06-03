@@ -28,7 +28,6 @@ class Misc(object):
 
     # Secret key for signing cookies
     SECRET_KEY = "N0t@Decided"
-    PORT
 
 
 class Dev(object):
@@ -36,7 +35,6 @@ class Dev(object):
     DB_USER = 'kmis_db_user'
     DB_PASSWD = 'UnDetect@ble123!'
     DB_CATALOG_NAME = 'kmis'
-    KMIS_APP_PORT = 5000
 
 
 class Prod(object):
@@ -44,4 +42,3 @@ class Prod(object):
     DB_USER = 'kmis_db_user'
     DB_PASSWD = 'UnDetect@ble123!'
     DB_CATALOG_NAME = 'kmis'
-    KMIS_APP_PORT = 5000

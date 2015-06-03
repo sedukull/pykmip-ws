@@ -1,3 +1,8 @@
+/*
+__Author__: Santhosh
+__Version__:1.0
+__Desc__: DB Code for KMIS Solution
+ */
 
 DROP DATABASE IF EXISTS `kmis`;
 DROP TABLE IF EXISTS `kmis`.`app_users`;
@@ -18,8 +23,10 @@ CREATE TABLE `kmis`.`app_users`
    PRIMARY KEY ( app_user_id,app_key )
 );
 
+DROP USER 'kmis_db_user'@'localhost';
+
 CREATE USER 'kmis_db_user'@'localhost' IDENTIFIED BY 'UnDetect@ble123!';
 
-GRANT ALL PRIVILEGES ON 'kmis' . * TO 'kmis_db_user'@'UnDetect@ble123!';
+GRANT ALL PRIVILEGES ON kmis.* TO 'kmis_db_user'@'localhost';
 
 FLUSH PRIVILEGES;

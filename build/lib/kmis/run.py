@@ -10,6 +10,6 @@ from kmis.config import Prod
 
 
 # Run the Application
-http_server = WSGIServer(('', Prod.KMIS_APP_PORT), app)
+http_server = WSGIServer(('', Prod.PORT), app)
 http_server.serve_forever()
 app.run(debug=True)

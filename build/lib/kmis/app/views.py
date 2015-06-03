@@ -7,7 +7,7 @@ __Desc__ : Provides the routing and verification of initial requests to kis
 from flask import Flask
 from flask import request
 from functools import wraps
-from kmis.lib.util import (verify_kms_cred_info,verify_app_auth)
+from util import verify_cred_info
 from kmis import (get_kmip_client,
                   get_key_proxy,
                   get_key_attr_proxy,

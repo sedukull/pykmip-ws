@@ -6,4 +6,4 @@ Description:
     enterprise applications.
     3. KIS\KMIS:
         Key Integration Service(or) Key Management Integration Service.
-        Interface between KMS(Key Management Solution\Server) and enterprise applications
+        Interface between KMS(Key Management Solution\Server) and enterprise applications.

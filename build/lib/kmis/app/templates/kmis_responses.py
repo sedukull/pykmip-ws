@@ -6,10 +6,10 @@ __Version__:1.0
 
 from flask import Response
 import json
-from kmis.app.templates.enums import (KmisResponseTypes, KmisResponseCodes, KmisResponseStatus)
+from enums import (KmisResponseTypes, KmisResponseCodes, KmisResponseStatus)
 
 
-class KmisResponse(object):
+class KisResponse(object):
 
     def __init__(self, status_code, status_msg, status_desc, kmip_server_resp):
         self.response_type = KmisResponseTypes.KIS_RESP_TYPE
@@ -32,7 +32,7 @@ class KmisResponse(object):
         pass
 
 
-class KeyResponse(KmisResponse):
+class KeyResponse(KisResponse):
 
     def __init__(self, status_code, status_msg, status_desc, kmip_server_resp):
         self.key_response = {
@@ -40,7 +40,7 @@ class KeyResponse(KmisResponse):
             'response_msg': '',
             'response_desc': '',
             'key_value': ''}
-        KmisResponse.__init__(
+        KisResponse.__init__(
             self,
             status_code,
             status_msg,
@@ -62,7 +62,7 @@ class KeyResponse(KmisResponse):
         return api_resp
 
 
-class KeyAttrResponse(KmisResponse):
+class KeyAttrResponse(KisResponse):
 
     def __init__(self, status_code, status_msg, status_desc, kmip_server_resp):
         self.key_attr_response = {
@@ -70,7 +70,7 @@ class KeyAttrResponse(KmisResponse):
             'response_msg': '',
             'response_desc': '',
             'key_attr_value': ''}
-        KmisResponse.__init__(
+        KisResponse.__init__(
             self,
             status_code,
             status_msg,
@@ -92,7 +92,7 @@ class KeyAttrResponse(KmisResponse):
         return api_resp
 
 
-class CertResponse(KmisResponse):
+class CertResponse(KisResponse):
 
     def __init__(self, status_code, status_msg, status_desc, kmip_server_resp):
         self.cert_response = {
@@ -100,7 +100,7 @@ class CertResponse(KmisResponse):
             'response_msg': '',
             'response_desc': '',
             'cert_value': ''}
-        KmisResponse.__init__(
+        KisResponse.__init__(
             self,
             status_code,
             status_msg,
@@ -122,7 +122,7 @@ class CertResponse(KmisResponse):
         return api_resp
 
 
-class CertAttrResponse(KmisResponse):
+class CertAttrResponse(KisResponse):
 
     def __init__(self, status_code, status_msg, status_desc, kmip_server_resp):
         self.cert_attr_response = {
@@ -130,7 +130,7 @@ class CertAttrResponse(KmisResponse):
             'response_msg': '',
             'response_desc': '',
             'cert_attr_value': ''}
-        KmisResponse.__init__(
+        KisResponse.__init__(
             self,
             status_code,
             status_msg,
@@ -152,14 +152,14 @@ class CertAttrResponse(KmisResponse):
         return api_resp
 
 
-class InvalidResponse(KmisResponse):
+class InvalidResponse(KisResponse):
 
     def __init__(self, status_code, status_msg, status_desc, kmip_server_resp):
         self.invalid_response = {
             'response_code': '408',
             'response_msg': '',
             'response_desc': 'Invalid Request, Please check all params once again'}
-        KmisResponse.__init__(
+        KisResponse.__init__(
             self,
             status_code,
             status_msg,
