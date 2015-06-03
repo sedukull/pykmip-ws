@@ -1,4 +1,0 @@
-MySQL-python
-flask
-flask-wtf
-gevent
