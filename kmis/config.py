@@ -28,7 +28,9 @@ class Misc(object):
 
     # Secret key for signing cookies
     SECRET_KEY = "N0t@Decided"
-    PORT
+
+    # Pass Phrase
+    PASS_PHRASE = "Hd@GreatC0mp@n!!"
 
 
 class Dev(object):

@@ -7,7 +7,7 @@ __Desc__ : Provides the routing and verification of initial requests to kis
 from flask import Flask
 from flask import request
 from functools import wraps
-from kmis.lib.util import (verify_kms_cred_info,verify_app_auth)
+from kmis.lib.util import (verify_kms_cred_info, verify_app_auth)
 from kmis import (get_kmip_client,
                   get_key_proxy,
                   get_key_attr_proxy,
@@ -23,6 +23,21 @@ from kmis.templates.enums import (
     KmisResponseStatus,
     KmisResponseCodes)
 from kmis.app import app
+from kmis.config import Misc
+
+
+@app.errorhandler(500)
+def internal_error(exception):
+    '''
+    Error Handler for Views
+    '''
+    app.logger.exception(exception)
+    return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
+
+
+def success_msg(msg):
+    if Misc.Debug:
+        app.logger.debug(msg)
 
 
 @app.route("/key/", methods=("POST", ))
@@ -34,9 +49,9 @@ def getKey(user_name=None, password=None, key_name=None):
         final_res = get_key_proxy(client, credential, key_name)
         temp_obj = KeyResponse(final_res)
         close_kmip_proxy(client)
+        app.logger.debug("==== Key Retrieval Successful ====")
         return temp_obj(), KmisResponseCodes.SUCCESS
     except Exception as ex:
-        print "\n ===Exception Occurred===", ex
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
@@ -49,9 +64,9 @@ def getKeyAttributes(user_name=None, password=None, key_name=None):
         final_res = get_key_attr_proxy(client, credential, key_name)
         temp_obj = KeyAttrResponse(final_res)
         close_kmip_proxy(client)
+        app.logger.debug("==== Key Attr Retrieval Successful ====")
         return temp_obj(), KmisResponseCodes.SUCCESS
     except Exception as ex:
-        print "\n ===Exception Occurred===", ex
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
@@ -64,9 +79,9 @@ def getCertificate(user_name=None, password=None, cert_name=None):
         final_res = get_cert_proxy(client, credential, cert_name)
         temp_obj = CertResponse(final_res)
         close_kmip_proxy(client)
+        app.logger.debug("==== Cert Retrieval Successful ====")
         return temp_obj(), KmisResponseCodes.SUCCESS
     except Exception as ex:
-        print "\n ===Exception Occurred===", ex
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
@@ -79,7 +94,7 @@ def getCertificateAttributes(user_name=None, password=None, cert_name=None):
         final_res = get_cert_attr_proxy(client, credential, cert_name)
         temp_obj = CertAttrResponse(final_res)
         close_kmip_proxy(client)
+        app.logger.debug("==== Cert Attr Retrieval Successful ====")
         return temp_obj(), KmisResponseCodes.SUCCESS
     except Exception as ex:
-        print "\n ===Exception Occurred===", ex
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR

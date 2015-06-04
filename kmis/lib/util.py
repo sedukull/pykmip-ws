@@ -11,6 +11,7 @@ import base64
 import random
 import hashlib
 from kmis.lib.kmis_dal import KmisDb
+from kmis.config import Misc
 
 
 def extract_request_information():
@@ -24,8 +25,10 @@ def check_auth(user_name, password):
     """
     # Stub for decrypt(username,password)
     db_obj = KmisDb()
+    b64_dec_app_key = base64.b64decode(user_name)
+    b64_dec_app_pass_phrase = base64.b64decode(password)
     return db_obj.verify_app_cred(
-        generate_hashed_str(user_name), generate_hashed_str(password))
+        generate_hashed_str(b64_dec_app_key), generate_hashed_str(b64_dec_app_pass_phrase))
 
 
 def authenticate(msg):
@@ -34,7 +37,7 @@ def authenticate(msg):
 
 
 def generate_hashed_str(inp_str):
-    return base64.b64encode(hashlib.sha512(str(inp_str) + str(random.getrandbits(512))).digest(), base64.b64encode(
+    return base64.b64encode(hashlib.sha512(str(inp_str) + str(random.getrandbits(512)) + Misc.PASS_PHRASE).digest(), base64.b64encode(
         hashlib.sha512(str(random.getrandbits(512))).digest(), random.choice(['rA', 'aZ', 'gQ', 'hH', 'hG', 'aR', 'DD'])).rstrip('=='))
 
 
