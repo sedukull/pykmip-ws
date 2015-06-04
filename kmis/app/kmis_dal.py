@@ -1,4 +1,11 @@
+'''
+__Author__ : Santhosh
+__Version__: 1.0
+__Desc__   : Provides DAL Interface to KMIS.
+'''
+
 #!/usr/bin/python
+
 import MySQLdb
 from kmis.config import Prod
 
@@ -6,16 +13,16 @@ from kmis.config import Prod
 class KmisDb(object):
 
     def __init__(self):
-        self.db = MySQLdb.connect(host=Prod.DB_HOST,  # your host, usually localhost
-                                  user=Prod.DB_USER,  # your username
-                                  passwd=Prod.DB_PASSWD,  # your password
-                                  db=Prod.DB_CATALOG_NAME)  # name of the data base
+        self.db = MySQLdb.connect(host=Prod.DB_HOST,
+                                  user=Prod.DB_USER,
+                                  passwd=Prod.DB_PASSWD,
+                                  db=Prod.DB_CATALOG_NAME)
 
     def verify_app_cred(app_hashed_key, app_hashed_password):
-        cur = self.db.cursor()
-        cur.execute('select app_key, app_pass_phrase from `kmis`.`app_users`')
+        cur = self.db.cursor(MySQLdb.cursors.DictCursor)
+        cur.execute('select app_key, app_pass_phrase, active from `kmis`.`app_users`')
         for row in cur.fetchall():
-            if app_hashed_key == row[0] and app_hashed_password == row[1]:
+            if (app_hashed_key == row["app_key"]) and (app_hashed_password == row["app_pass_phrase"]) and (1 == row["active"]):
                 return True
         return False
 

@@ -13,12 +13,12 @@ from kmis import (get_kmip_client,
                   get_key_attr_proxy,
                   get_cert_proxy,
                   get_cert_attr_proxy)
-from kmis.templates.kmis_responses import (CertAttrResponse,
+from kmis.app.templates.kmis_responses import (CertAttrResponse,
                                            KeyAttrResponse,
                                            KeyResponse,
                                            CertResponse,
                                            InvalidResponse)
-from kmis.templates.enums import (
+from kmis.app.templates.enums import (
     KmisResponseTypes,
     KmisResponseStatus,
     KmisResponseCodes)
