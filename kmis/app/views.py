@@ -22,25 +22,25 @@ from kmis.app.templates.enums import (
     KmisResponseTypes,
     KmisResponseStatus,
     KmisResponseCodes)
-from kmis.app import app
+from kmis.app import kmis_app
 from kmis.config import Misc
 
 
-@app.errorhandler(500)
+@kmis_app.errorhandler(500)
 def internal_error(exception):
     '''
     Error Handler for Views
     '''
-    app.logger.exception(exception)
+    kmis_app.logger.exception(exception)
     return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
 def success_msg(msg):
     if Misc.Debug:
-        app.logger.debug(msg)
+        kmis_app.logger.debug(msg)
 
 
-@app.route("/key/", methods=("POST", ))
+@kmis_app.route("/key/", methods=("POST", ))
 @verify_app_auth
 @veriy_kms_cred_info
 def getKey(user_name=None, password=None, key_name=None):
@@ -49,13 +49,13 @@ def getKey(user_name=None, password=None, key_name=None):
         final_res = get_key_proxy(client, credential, key_name)
         temp_obj = KeyResponse(final_res)
         close_kmip_proxy(client)
-        app.logger.debug("==== Key Retrieval Successful ====")
+        kmis_app.logger.debug("==== Key Retrieval Successful ====")
         return temp_obj(), KmisResponseCodes.SUCCESS
     except Exception as ex:
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
-@app.route("/key/attributes/", methods=("POST", ))
+@kmis_app.route("/key/attributes/", methods=("POST", ))
 @verify_app_auth
 @veriy_kms_cred_info
 def getKeyAttributes(user_name=None, password=None, key_name=None):
@@ -64,13 +64,13 @@ def getKeyAttributes(user_name=None, password=None, key_name=None):
         final_res = get_key_attr_proxy(client, credential, key_name)
         temp_obj = KeyAttrResponse(final_res)
         close_kmip_proxy(client)
-        app.logger.debug("==== Key Attr Retrieval Successful ====")
+        kmis_app.logger.debug("==== Key Attr Retrieval Successful ====")
         return temp_obj(), KmisResponseCodes.SUCCESS
     except Exception as ex:
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
-@app.route("/cert/", methods=("POST", ))
+@kmis_app.route("/cert/", methods=("POST", ))
 @verify_app_auth
 @veriy_kms_cred_info
 def getCertificate(user_name=None, password=None, cert_name=None):
@@ -79,13 +79,13 @@ def getCertificate(user_name=None, password=None, cert_name=None):
         final_res = get_cert_proxy(client, credential, cert_name)
         temp_obj = CertResponse(final_res)
         close_kmip_proxy(client)
-        app.logger.debug("==== Cert Retrieval Successful ====")
+        kmis_app.logger.debug("==== Cert Retrieval Successful ====")
         return temp_obj(), KmisResponseCodes.SUCCESS
     except Exception as ex:
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
-@app.route("/cert/attributes/", methods=("POST", ))
+@kmis_app.route("/cert/attributes/", methods=("POST", ))
 @verify_app_auth
 @veriy_kms_cred_info
 def getCertificateAttributes(user_name=None, password=None, cert_name=None):
@@ -94,7 +94,7 @@ def getCertificateAttributes(user_name=None, password=None, cert_name=None):
         final_res = get_cert_attr_proxy(client, credential, cert_name)
         temp_obj = CertAttrResponse(final_res)
         close_kmip_proxy(client)
-        app.logger.debug("==== Cert Attr Retrieval Successful ====")
+        kmis_app.logger.debug("==== Cert Attr Retrieval Successful ====")
         return temp_obj(), KmisResponseCodes.SUCCESS
     except Exception as ex:
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
