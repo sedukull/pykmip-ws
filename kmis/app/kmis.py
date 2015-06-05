@@ -20,7 +20,7 @@ from kmis.app.templates.enums import (
     KmisResponseTypes,
     KmisResponseStatus,
     KmisResponseCodes)
-from kmis.templates.kmis_responses import (CertAttrResponse,
+from kmis.app.templates.kmis_responses import (CertAttrResponse,
                                            KeyAttrResponse,
                                            KeyResponse,
                                            CertResponse,

@@ -8,7 +8,7 @@ from flask import Flask
 from flask import request
 from functools import wraps
 from kmis.lib.util import (verify_kms_cred_info, verify_app_auth)
-from kmis import (get_kmip_client,
+from kmis.app.kmis import (get_kmip_client,
                   get_key_proxy,
                   get_key_attr_proxy,
                   get_cert_proxy,

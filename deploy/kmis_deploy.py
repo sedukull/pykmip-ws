@@ -19,9 +19,9 @@ remote_flask_dir = remote_app_dir + '/flask_project'
 remote_nginx_dir = '/etc/nginx/sites-enabled'
 remote_supervisor_dir = '/etc/supervisor/conf.d'
 
-env.hosts = ['add_ip_or_domain']  # replace with IP address or hostname
+env.hosts = ['localhost']  # replace with IP address or hostname
 env.user = 'newuser'
-# env.password = 'blah!'
+env.password = 'blah!'
 
 
 #############
@@ -35,7 +35,6 @@ def install_requirements():
     sudo('apt-get install -y python-pip')
     sudo('apt-get install -y python-virtualenv')
     sudo('apt-get install -y nginx')
-    sudo('apt-get install -y gunicorn')
     sudo('apt-get install -y supervisor')
     sudo('apt-get install -y git')
 
@@ -50,14 +49,11 @@ def install_flask():
         sudo('mkdir ' + remote_app_dir)
     if exists(remote_flask_dir) is False:
         sudo('mkdir ' + remote_flask_dir)
-    with lcd(local_app_dir):
-        with cd(remote_app_dir):
-            sudo('virtualenv env')
-            sudo('source env/bin/activate')
-            sudo('pip install Flask==0.10.1')
-        with cd(remote_flask_dir):
-            put('*', './', use_sudo=True)
-
+    sudo('pip install Flask')
+    sudo('pip install Flask-WTF')
+    sudo('pip install gevent')
+    sudo('pip install MySQL-python')
+    sudo('pip install paramiko')
 
 def configure_nginx():
     """
