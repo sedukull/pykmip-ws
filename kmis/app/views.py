@@ -8,7 +8,7 @@ from flask import Flask
 from flask import request
 from functools import wraps
 from kmis.lib.util import (verify_kms_cred_info, verify_app_auth)
-from kmis.app.kmis import (get_kmip_client,
+from kmis.app.kmis_core import (get_kmip_client,
                   get_key_proxy,
                   get_key_attr_proxy,
                   get_cert_proxy,
@@ -18,13 +18,32 @@ from kmis.app.templates.kmis_responses import (CertAttrResponse,
                                            KeyResponse,
                                            CertResponse,
                                            InvalidResponse)
-from kmis.app.templates.enums import (
+from kmis.app.templates.kmis_enums import (
     KmisResponseTypes,
     KmisResponseStatus,
     KmisResponseCodes)
 from kmis.app import kmis_app
 from kmis.config import Misc
+import urllib
 
+@kmis_app.route('/',methods=("POST","GET"))
+@kmis_app.route('/index',methods=("POST","GET"))
+def index():
+    output = []
+    with open(os.path.join(Misc.APP_ROOT, 'README.txt')) as f:
+        print f.read()
+        print "\n\n"
+    for rule in app.url_map.iter_rules():
+        options = {}
+        for arg in rule.arguments:
+            options[arg] = "[{0}]".format(arg)
+            methods = ','.join(rule.methods)
+            url = url_for(rule.endpoint, **options)
+            line = urllib.unquote("{:50s} {:20s} {}".format(rule.endpoint, methods, url))
+            output.append(line)
+
+    for line in sorted(output):
+        print line
 
 @kmis_app.errorhandler(500)
 def internal_error(exception):
@@ -40,7 +59,7 @@ def success_msg(msg):
         kmis_app.logger.debug(msg)
 
 
-@kmis_app.route("/key/", methods=("POST", ))
+@kmis_app.route("/key", methods=("POST","GET"))
 @verify_app_auth
 @veriy_kms_cred_info
 def getKey(user_name=None, password=None, key_name=None):
@@ -55,7 +74,7 @@ def getKey(user_name=None, password=None, key_name=None):
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
-@kmis_app.route("/key/attributes/", methods=("POST", ))
+@kmis_app.route("/key/attributes", methods=("POST","GET"))
 @verify_app_auth
 @veriy_kms_cred_info
 def getKeyAttributes(user_name=None, password=None, key_name=None):
@@ -70,7 +89,7 @@ def getKeyAttributes(user_name=None, password=None, key_name=None):
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
-@kmis_app.route("/cert/", methods=("POST", ))
+@kmis_app.route("/cert", methods=("POST","GET"))
 @verify_app_auth
 @veriy_kms_cred_info
 def getCertificate(user_name=None, password=None, cert_name=None):
@@ -85,7 +104,7 @@ def getCertificate(user_name=None, password=None, cert_name=None):
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
-@kmis_app.route("/cert/attributes/", methods=("POST", ))
+@kmis_app.route("/cert/attributes", methods=("POST","GET"))
 @verify_app_auth
 @veriy_kms_cred_info
 def getCertificateAttributes(user_name=None, password=None, cert_name=None):

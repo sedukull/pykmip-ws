@@ -1,7 +1,7 @@
 '''
 __Author__:Santhosh
 __Version__:1.0
-__Desc__:Enums\Codes\Messages for KIS Project
+__Desc__:Enums\Codes\Messages for KMIS WS
 '''
 
 

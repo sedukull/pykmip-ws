@@ -14,7 +14,7 @@ except ImportError:
         use_setuptools()
         from setuptools import setup, find_packages
     except ImportError:
-        raise RuntimeError("python setuptools is required to build kis ws")
+        raise RuntimeError("python setuptools is required to build kmis ws")
 
 VERSION = "1.0"
 
@@ -30,12 +30,13 @@ setup(name="kmis",
       packages=["kmis",
                 "kmis.lib",
                 "kmis.test",
+                "kmis.deploy",
                 "kmis.db",
                 "kmis.app",
                 "kmis.app.templates",
                 "kmis.app.static"],
       long_description="kmis is the web service implementation for pykmip which provides key management facilities to applications",
-      url="https://dummy.com",
+      url="https://dummyhda.com",
       license="LICENSE.txt",
       install_requires=[
           "MySQL-python",

@@ -16,7 +16,7 @@ from kmip.core.factories.attributes import AttributeFactory
 from kmip.core.factories.credentials import CredentialFactory
 from kmip.core.objects import TemplateAttribute, Attribute
 from kmip.services.kmip_client import KMIPProxy
-from kmis.app.templates.enums import (
+from kmis.app.templates.kmis_enums import (
     KmisResponseTypes,
     KmisResponseStatus,
     KmisResponseCodes)

@@ -5,6 +5,7 @@ import logging
 import sys
 import time
 import os
+import subprocess
 from logging.handlers import RotatingFileHandler
 from kmis.config import Misc
 
@@ -21,7 +22,7 @@ class KmisLog(object):
 
     def __new__(cls):
         if not cls._instance:
-            cls._instance = super(KisLog, cls).__new__(cls, logger_name)
+            cls._instance = super(KmisLog, cls).__new__(cls)
             return cls._instance
 
     def __init__(self):
@@ -29,7 +30,7 @@ class KmisLog(object):
         @Name: __init__
         @Input: logger_name for logger
         '''
-        self.__loggerName = 'Kmis_Logger'
+        self.__loggerName = 'Kmis_logger'
         '''
         Logger for Logging Info
         '''
@@ -54,6 +55,8 @@ class KmisLog(object):
         @Desc : Gets the Logger with file paths initialized and created
         '''
         try:
+            subprocess.call(['chmod', '-R', '777', self.__logFolderDir])
+            subprocess.call(['chmod', '-R', '777', self.__logFolderDir + "/run.log"])
             self.__logger = logging.getLogger(self.__loggerName)
             self.__logger.setLevel(logging.DEBUG)
             if not os.path.isdir(self.__logFolderDir):
