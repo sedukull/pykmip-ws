@@ -1,0 +1,6 @@
+include kmis / src / templates / *
+include deploy / *
+include *.txt
+include *.html
+recursive-include deploy *.crt *.py *.conf
+include kmis / *.txt

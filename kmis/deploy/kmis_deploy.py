@@ -55,6 +55,7 @@ def install_flask():
     sudo('pip install MySQL-python')
     sudo('pip install paramiko')
 
+
 def configure_nginx():
     """
     1. Remove default nginx config file

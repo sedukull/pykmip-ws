@@ -16,29 +16,31 @@ from kmip.core.factories.attributes import AttributeFactory
 from kmip.core.factories.credentials import CredentialFactory
 from kmip.core.objects import TemplateAttribute, Attribute
 from kmip.services.kmip_client import KMIPProxy
-from kmis.app.templates.kmis_enums import (
+from kmis.src.templates.kmis_enums import (
     KmisResponseTypes,
     KmisResponseStatus,
     KmisResponseCodes)
-from kmis.app.templates.kmis_responses import (CertAttrResponse,
-                                           KeyAttrResponse,
-                                           KeyResponse,
-                                           CertResponse,
-                                           InvalidResponse)
-from kmis.config import Misc
+from kmis.src.templates.kmis_responses import (CertAttrResponse,
+                                               KeyAttrResponse,
+                                               KeyResponse,
+                                               CertResponse,
+                                               InvalidResponse)
+from kmis.config import (Kms, Misc)
 import os
 import sys
 import traceback
 
 
-def get_kmip_client(user_name, passwd):
+def get_kmip_client():
     client = None
     credential_factory = CredentialFactory()
     credential_type = CredentialType.USERNAME_AND_PASSWORD
-    credential_value = {'Username': user_name, 'Password': passwd}
+    credential_value = {
+        'Username': Kms.KMS_USER_NAME, 'Password': Kms.KMS_PASSWORD}
     credential = credential_factory.create_credential(credential_type,
                                                       credential_value)
-    client = KMIPProxy()
+    client = KMIPProxy(host=Kms.KMS_HOST, port=int(Kms.KMS_PORT), keyfile=None, certfile=None, cert_reqs=None, ssl_version=Kms.KMS_SSL_VERSION, ca_certs=Kms.KMS_CA_CERTS,
+                       do_handshake_on_connect=Kms.KMS_HANDSHAKE_ON_CONNECT, suppress_ragged_eofs=Kms.KMS_SUPPRESSED_RAGGED_EOFS, username=Kms.KMS_USER_NAME, password=Kms.KMS_PASSWORD)
     client.open()
     return (client, credential)
 

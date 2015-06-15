@@ -6,9 +6,8 @@ __Desc__: Provides the configuration information for KMIS.
 
 import os
 
+
 class Misc(object):
-    KMS_CLUSTER_FQDN = ''
-    KMS_CLUSTER_IP = ''
     LOG_FOLDER_PATH = '/var/log/kmis/'
 
     APP_LOG_FILE_PATH = 'kmis/config.py'
@@ -35,8 +34,24 @@ class Misc(object):
     # Pass Phrase
     PASS_PHRASE = "Hd@GreatC0mp@n!!"
 
-    # __file__ refers to the file settings.py 
-    APP_ROOT = os.path.dirname(os.path.abspath(__file__)) 
+    # __file__ refers to the file settings.py
+    APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+    APP_NAME = "KMIS"
+
+
+class Kms(object):
+    KMS_CLUSTER_ENDPOINT = '10.51.5.46'
+    KMS_USER_NAME = 'test_app'
+    KMS_PASSWORD = 'P@ssw0rd123'
+    KMS_HOST = "10.51.5.46"
+    KMS_PORT = "5696"
+    KMS_KEY_FILE = None
+    KMS_CERTFILE = None
+    KMS_CERT_REQIRES = True
+    KMS_SSL_VERSION = "TLSv1.1"
+    KMS_CA_CERTS = "ca_cer.crt"
+    KMS_HANDSHAKE_ON_CONNECT = True
+    KMS_SUPPRESSED_RAGGED_EOFS = True
 
 
 class Dev(object):
@@ -46,6 +61,7 @@ class Dev(object):
     DB_CATALOG_NAME = 'kmis'
     KMIS_APP_PORT = 5000
     KMIS_APP_IP = 'localhost'
+    DEBUG = True
 
 
 class Prod(object):
@@ -55,3 +71,4 @@ class Prod(object):
     DB_CATALOG_NAME = 'kmis'
     KMIS_APP_PORT = 5000
     KMIS_APP_IP = 'localhost'
+    DEBUG = True

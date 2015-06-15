@@ -56,7 +56,8 @@ class KmisLog(object):
         '''
         try:
             subprocess.call(['chmod', '-R', '777', self.__logFolderDir])
-            subprocess.call(['chmod', '-R', '777', self.__logFolderDir + "/run.log"])
+            subprocess.call(
+                ['chmod', '-R', '777', self.__logFolderDir + "/run.log"])
             self.__logger = logging.getLogger(self.__loggerName)
             self.__logger.setLevel(logging.DEBUG)
             if not os.path.isdir(self.__logFolderDir):

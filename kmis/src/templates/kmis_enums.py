@@ -8,7 +8,7 @@ __Desc__:Enums\Codes\Messages for KMIS WS
 class KmisResponseStatus(object):
     SUCCESSFUL = 'Successful'
     FAIL = 'Failure'
-    ERROR = 'Error'
+    ERROR = 'Sorry, kmis errored'
 
 
 class KmisResponseTypes(object):
@@ -16,6 +16,6 @@ class KmisResponseTypes(object):
 
 
 class KmisResponseCodes(object):
-    FAIL_CODE = 408
+    FAIL = 408
     SERVER_ERROR = 500
-    SUCCESS_CODE = 200
+    SUCCESS = 200

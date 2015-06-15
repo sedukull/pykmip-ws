@@ -10,7 +10,7 @@ from flask import g, flash, Response, redirect, url_for, request
 import base64
 import random
 import hashlib
-from kmis.lib.kmis_dal import KmisDb
+from kmis.src.kmis_dal import KmisDb
 from kmis.config import Misc
 
 
@@ -19,7 +19,7 @@ def extract_request_information():
     return remote_address
 
 
-def check_auth(user_name, password):
+def check_auth(src, user_name, password):
     """This function is called to check if a username /
             password combination is valid.
     """
@@ -27,12 +27,13 @@ def check_auth(user_name, password):
     db_obj = KmisDb()
     b64_dec_app_key = base64.b64decode(user_name)
     b64_dec_app_pass_phrase = base64.b64decode(password)
-    return db_obj.verify_app_cred(
-        generate_hashed_str(b64_dec_app_key), generate_hashed_str(b64_dec_app_pass_phrase))
+    return db_obj.verify_app_cred(src,
+                                  generate_hashed_str(b64_dec_app_key), generate_hashed_str(b64_dec_app_pass_phrase))
 
 
 def authenticate(msg):
     """Sends a 401 response that enables basic auth"""
+    print msg
     return Response(msg, status=401)
 
 
@@ -46,7 +47,7 @@ def verify_kms_cred_info(func):
     def decorated_function(*args, **kwargs):
         remote_address = extract_request_information()
         print "\n === Input Request %s == IP : %s : ==== " % (str(func), str(remote_address))
-        if (not args) or (not args[0]) or (not args[1]):
+        if (not request.form["app_key"]) or (not request.form["app_secret"]):
             print "\n === Invalid KMS Username and Password ==== "
             return authenticate('Invalid KMS Username and Password')
         else:
@@ -61,6 +62,21 @@ def log_input_request(func):
         remote_address = extract_request_information()
         print "\n === Input Request %s from IP : %s : ==== " % (str(func), str(remote_address))
         return func(*args, **kwarg)
+    return decorated_function
+
+
+def verify_app_request(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        remote_address = extract_request_information()
+        print "\n === Input Request %s == IP : %s : ==== " % (str(func), str(remote_address))
+        app_key = request.form["app_key"]
+        app_secret = request.form["app_secret"]
+        if (not app_key) or (not app_secret) or (
+                not check_auth(remote_address, app_key, app_secret)):
+            return authenticate('Invalid app key or app secret')
+        else:
+            return func(*args, **kwargs)
     return decorated_function
 
 

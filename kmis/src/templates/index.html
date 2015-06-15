@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	  <title>HealthDirect KMIS Facilities</title>
+  </head>
+  <body>
+	  <h3><i>{{ intro }}</i></h3><br/><br/>
+	  <ul>{% for endpoint in endpoints %}
+		<li>{{ endpoint }}</li>
+	      {% endfor %}
+	  </ul>
+  </body>
+</html>

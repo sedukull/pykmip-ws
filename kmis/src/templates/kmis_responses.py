@@ -6,7 +6,7 @@ __Version__:1.0
 
 from flask import Response
 import json
-from kmis.app.templates.kmis_enums import (
+from kmis.src.templates.kmis_enums import (
     KmisResponseTypes,
     KmisResponseCodes,
     KmisResponseStatus)
