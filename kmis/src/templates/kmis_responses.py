@@ -1,6 +1,6 @@
 '''
 __Author__: Santhosh
-__Desc__: KIS Server Response Information
+__Desc__: KMIS Server Response Information
 __Version__:1.0
 '''
 
@@ -15,16 +15,16 @@ from kmis.src.templates.kmis_enums import (
 class KmisResponse(object):
 
     def __init__(self):
-        self.response_type = KmisResponseTypes.KIS_RESP_TYPE
+        self.response_type = KmisResponseTypes.KMIS_RESP_TYPE
         self.response_dict = {
-            'status_code': KmisResponseCodes.FAIL_CODE,
+            'status_code': KmisResponseCodes.FAIL,
             'status_msg': KmisResponseStatus.FAIL,
             'status_desc': '',
             'result': ''}
 
     def __call__(self, status_code, status_msg, status_desc):
         self.set_default_response_status(status_code, status_msg, status_desc)
-        resp_js = json.dumps(self.response_dict.__dict__)
+        resp_js = json.dumps(self.response_dict)
         api_resp = Response(
             resp_js,
             status=self.status_code,

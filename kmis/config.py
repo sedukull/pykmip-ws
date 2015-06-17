@@ -34,22 +34,21 @@ class Misc(object):
     # Pass Phrase
     PASS_PHRASE = "Hd@GreatC0mp@n!!"
 
-    # __file__ refers to the file settings.py
     APP_ROOT = os.path.dirname(os.path.abspath(__file__))
     APP_NAME = "KMIS"
 
 
 class Kms(object):
-    KMS_CLUSTER_ENDPOINT = '10.51.5.46'
-    KMS_USER_NAME = 'test_app'
-    KMS_PASSWORD = 'P@ssw0rd123'
-    KMS_HOST = "10.51.5.46"
-    KMS_PORT = "5696"
+    KMS_CLUSTER_ENDPOINT = 'x.x.x.x'
+    KMS_USER_NAME = '123'
+    KMS_PASSWORD = '123'
+    KMS_HOST = "x.x.x.x"
+    KMS_PORT = "xxx"
     KMS_KEY_FILE = None
     KMS_CERTFILE = None
     KMS_CERT_REQIRES = True
-    KMS_SSL_VERSION = "TLSv1.1"
-    KMS_CA_CERTS = "ca_cer.crt"
+    KMS_SSL_VERSION = "PROTOCOL_TLSv1"
+    KMS_CA_CERTS = os.path.join(Misc.APP_ROOT, "deploy/ca_cert.crt")
     KMS_HANDSHAKE_ON_CONNECT = True
     KMS_SUPPRESSED_RAGGED_EOFS = True
 

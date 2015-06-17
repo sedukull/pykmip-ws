@@ -12,7 +12,7 @@ class KmisResponseStatus(object):
 
 
 class KmisResponseTypes(object):
-    KIS_RESP_TYPE = 'application/json'
+    KMIS_RESP_TYPE = 'application/json'
 
 
 class KmisResponseCodes(object):

@@ -53,11 +53,11 @@ def close_kmip_proxy(client):
 def get_id(client, credential, name):
     key_id = None
     if client:
-        name = Attribute.AttributeName('Name')
+        attr_name = Attribute.AttributeName('Name')
         name_value = Name.NameValue(name)
         name_type = Name.NameType(NameType.UNINTERPRETED_TEXT_STRING)
-        value = Name(name_value=name_value, name_type=name_type)
-        nameattr = Attribute(attribute_name=name, attribute_value=value)
+        value = Name.create(name_value=name_value, name_type=name_type)
+        nameattr = Attribute(attribute_name=attr_name, attribute_value=value)
         attrs = [nameattr]
         result = client.locate(attributes=attrs, credential=credential)
         if result and result.result_status.enum == ResultStatus.SUCCESS:
@@ -69,16 +69,19 @@ def get_key_proxy(client, credential, key_name):
     res_obj = KeyResponse()
     try:
         key_id = get_id(client, credential, key_name)
+        print "Retrieving Id Successful",key_id
         kmip_result = client.get(uuid=key_id, credential=credential)
+        print "Retrieving Result Successful",kmip_result
         res_obj.parse_kmip_response(kmip_result)
-        if result and result.result_status.enum == ResultStatus.SUCCESS:
+        if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
                 KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
+        raise ex
         print "\n Exception occurred under get_key_proxy", ex
         type_, exception_str, traceback = sys.exc_info()
-        return res_obj(
-            KmisResponseCodes.FAIL_CODE, KmisResponseStatus.FAIL, exception_str)
+        #return res_obj(
+        #    KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
 
 
 def get_cert_proxy(client, credential, cert_name):
@@ -87,14 +90,14 @@ def get_cert_proxy(client, credential, cert_name):
         cert_id = get_id(client, credential, cert_name)
         kmip_result = client.get(uuid=cert_id, credential=credential)
         res_obj.parse_kmip_response(kmip_result)
-        if result and result.result_status.enum == ResultStatus.SUCCESS:
+        if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
                 KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
         print "\n Exception occurred under get_cert_proxy", ex
         type_, exception_str, traceback = sys.exc_info()
         return res_obj(
-            KmisResponseCodes.FAIL_CODE, KmisResponseStatus.FAIL, exception_str)
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
 
 
 def get_key_attr_proxy(client, credential, key_name):
@@ -103,14 +106,14 @@ def get_key_attr_proxy(client, credential, key_name):
         key_id = get_id(client, credential, key_name)
         kmip_result = client.get(uuid=key_id, credential=credential)
         res_obj.parse_kmip_response(kmip_result)
-        if result and result.result_status.enum == ResultStatus.SUCCESS:
+        if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
                 KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
         print "\n Exception occurred under get_key_attr_proxy", ex
         type_, exception_str, traceback = sys.exc_info()
         return res_obj(
-            KmisResponseCodes.FAIL_CODE, KmisResponseStatus.FAIL, exception_str)
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
 
 
 def get_cert_attr_proxy(client, credential, cert_name):
@@ -119,11 +122,11 @@ def get_cert_attr_proxy(client, credential, cert_name):
         cert_id = get_id(client, credential, cert_name)
         kmip_result = client.get(uuid=cert_id, credential=credential)
         res_obj.parse_kmip_response(kmip_result)
-        if result and result.result_status.enum == ResultStatus.SUCCESS:
+        if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
                 KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
         print "\n Exception occurred under get_cert_attr_proxy", ex
         type_, exception_str, traceback = sys.exc_info()
         return res_obj(
-            KmisResponseCodes.FAIL_CODE, KmisResponseStatus.FAIL, exception_str)
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)

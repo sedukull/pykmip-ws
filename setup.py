@@ -21,7 +21,7 @@ VERSION = "1.0"
 
 setup(name="kmis",
       version=VERSION,
-      description="web service implementation for pykmip providing kms facilities to applications",
+      description="web service implementation for pykmip, providing kms facilities to applications",
       author="Santhosh Kumar Edukulla",
       author_email="santhosh.edukulla@gmail.com",
       maintainer="Santhosh",
@@ -40,6 +40,7 @@ setup(name="kmis",
       url="https://dummyhda.com",
       license="LICENSE.txt",
       include_package_data=True,
+      package_data={'':['*.txt','*.html','*.crt']},
       install_requires=[
           "MySQL-python",
           "flask",

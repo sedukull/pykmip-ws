@@ -27,7 +27,7 @@ def index():
     try:
         endpoints = []
         intro = ""
-        with open(os.path.join(Misc.APP_ROOT, 'README.txt')) as f:
+        with open(os.path.join(Misc.APP_ROOT, 'deploy/README.txt')) as f:
             intro = "\n\r".join(f.readlines())
         for rule in kmis_app.url_map.iter_rules():
             options = {}
