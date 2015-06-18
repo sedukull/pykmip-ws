@@ -16,11 +16,12 @@ except ImportError:
     except ImportError:
         raise RuntimeError("python setuptools is required to build kmis ws")
 
-VERSION = "1.0"
+#VERSION = "1.0"
 
+exec(open('kmis/version.py').read())
 
 setup(name="kmis",
-      version=VERSION,
+      version=__version__,
       description="web service implementation for pykmip, providing kms facilities to applications",
       author="Santhosh Kumar Edukulla",
       author_email="santhosh.edukulla@gmail.com",
@@ -40,7 +41,7 @@ setup(name="kmis",
       url="https://dummyhda.com",
       license="LICENSE.txt",
       include_package_data=True,
-      package_data={'':['*.txt','*.html','*.crt']},
+      package_data={'': ['*.txt', '*.html', '*.crt']},
       install_requires=[
           "MySQL-python",
           "flask",

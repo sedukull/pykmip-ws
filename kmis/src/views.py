@@ -38,9 +38,9 @@ kmis_view = Blueprint('kmis_view', __name__)
 def getKey(key_name=None):
     try:
         (client, credential) = get_kmip_client()
-        print "Client and Credential",client, credential
+        print "Client and Credential", client, credential
         final_res = get_key_proxy(client, credential, key_name)
-        print "final_result:",final_res
+        print "final_result:", final_res
         temp_obj = KeyResponse(final_res)
         close_kmip_proxy(client)
         #kmis_app.logger.debug("==== Key Retrieval Successful ====")

@@ -29,10 +29,12 @@ def check_auth(src, user_name, password):
         b64_dec_app_key = base64.b64decode(user_name)
         b64_dec_app_pass_phrase = base64.b64decode(password)
         return True
-        #return db_obj.verify_app_cred(src,
-        #                          generate_hashed_str(b64_dec_app_key), generate_hashed_str(b64_dec_app_pass_phrase))
-    except Exception,e:
-            print e
+        # return db_obj.verify_app_cred(src,
+        # generate_hashed_str(b64_dec_app_key),
+        # generate_hashed_str(b64_dec_app_pass_phrase))
+    except Exception as e:
+        print e
+
 
 def authenticate(msg):
     """Sends a 401 response that enables basic auth"""
