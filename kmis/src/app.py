@@ -13,8 +13,7 @@ from kmis.src.templates.kmis_enums import (
     KmisResponseCodes)
 import urllib
 
-tmpl_dir = os.path.join(Misc.APP_ROOT, "src/templates")
-kmis_app = Flask(Misc.APP_NAME, template_folder=tmpl_dir)
+kmis_app = Flask(Misc.APP_NAME, template_folder=Misc.TEMPLATE_DIR)
 
 # Application Logger
 obj_log = KmisLog()
@@ -40,8 +39,6 @@ def index():
                     methods,
                     url))
             endpoints.append(line)
-        print intro, endpoints
         return render_template("index.html", intro=intro, endpoints=endpoints)
     except Exception as ex:
-        print "Index API Exception", ex
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR

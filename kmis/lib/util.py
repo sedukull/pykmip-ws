@@ -12,29 +12,43 @@ import random
 import hashlib
 from kmis.src.kmis_dal import KmisDb
 from kmis.config import Misc
+from kmis.lib.kmis_logger import KmisLog
+import hmac
+import hashlib
+import base64
 
+logger = KmisLog.getLogger()
 
 def extract_request_information():
     remote_address = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     return remote_address
 
 
-def check_auth(src, user_name, password):
+def check_auth(src, api_key, signature):
     """This function is called to check if a username /
             password combination is valid.
     """
     try:
+        return True
         # Stub for decrypt(username,password)
         db_obj = KmisDb()
-        b64_dec_app_key = base64.b64decode(user_name)
-        b64_dec_app_pass_phrase = base64.b64decode(password)
-        return True
-        # return db_obj.verify_app_cred(src,
-        # generate_hashed_str(b64_dec_app_key),
-        # generate_hashed_str(b64_dec_app_pass_phrase))
+        b64_dec_app_key = base64.b64decode(api_key)
+        hashed_api_key = generate_hashed_str(b64_dec_app_key)
+        msg = ''
+        app_secret = db_obj.get_app_secret(src,hashed_api_key)
+        if api_secret:
+            for key, values in request.headers.items():
+                msg = msg + str(key) + '=' + str(values)
+            to_verify_signature = sign(msg,app_secret)
+            if to_verify_signature == signature:
+                return True
+        return False    
     except Exception as e:
-        print e
+        logger.error("check auth failed for ip: %s api_key : %s" %(str(src),str(api_key)))
+        return False
 
+def sign(msg, secret_key):
+    return base64.b64encode(hmac.new(secret_key, msg=msg, digestmod=hashlib.sha256).digest())
 
 def authenticate(msg):
     """Sends a 401 response that enables basic auth"""
@@ -74,9 +88,10 @@ def verify_app_request(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
         remote_address = extract_request_information()
-        print "\n === Input Request %s == IP : %s : ==== " % (str(func), str(remote_address))
-        app_key = request.form["app_key"]
-        app_secret = request.form["app_secret"]
+        logger.debug("\n === Input Request :%s == IP : %s : ==== " % (str(func.func_name), str(remote_address)))
+        auth = request.authorization
+        app_key = auth.username
+        app_secret = auth.password
         if (not app_key) or (not app_secret) or (
                 check_auth(remote_address, app_key, app_secret) is False):
             return authenticate('Invalid app key or app secret')

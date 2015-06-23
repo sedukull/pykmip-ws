@@ -7,7 +7,8 @@ __Desc__   : Provides DAL Interface to KMIS.
 #!/usr/bin/python
 
 import MySQLdb
-from kmis.config import Prod
+from kmis.config import (Prod,Misc)
+from kmis.lib.kmis_logger import KmisLog
 
 
 class KmisDb(object):
@@ -19,7 +20,19 @@ class KmisDb(object):
                                       passwd=Prod.DB_PASSWD,
                                       db=Prod.DB_CATALOG_NAME)
         except Exception as ex:
-            print "==========", ex
+            KmisLog.getLogger.error("db connection creation failed ", str(ex))
+
+    def get_api_secret(src,hashed_api_key):
+        cur.execute(
+            'select app_ip, app_key, app_pass_phrase, active from `kmis`.`app_users`')
+        for row in cur.fetchall():
+            if (row["app_key"] == hashed_api_key) and (1 == int(row["active"])):
+                if Misc.VERIFY_SRC and (src == row["app_ip"]):
+                    return row["app_pass_phrase"]
+                if Misc.VERIFY_SRC:
+                    return None
+                return row["app_pass_phrase"]
+        return None    
 
     def verify_app_cred(src, app_hashed_key, app_hashed_password):
         cur = self.db.cursor(MySQLdb.cursors.DictCursor)

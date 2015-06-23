@@ -29,7 +29,9 @@ from kmis.config import (Kms, Misc)
 import os
 import sys
 import traceback
+from kmis.lib.kmis_logger import KmisLog
 
+logger = KmisLog.getLogger()
 
 def get_kmip_client():
     client = None
@@ -44,6 +46,7 @@ def get_kmip_client():
         port=Kms.KMS_PORT,
         cert_reqs=Kms.KMS_CERT_REQUIRES,
         ssl_version=Kms.KMS_SSL_VERSION,
+        certfile=Kms.KMS_CLIENT_CERTFILE,
         ca_certs=Kms.KMS_CA_CERTS,
         do_handshake_on_connect=Kms.KMS_HANDSHAKE_ON_CONNECT,
         suppress_ragged_eofs=Kms.KMS_SUPPRESSED_RAGGED_EOFS,
@@ -85,8 +88,8 @@ def get_key_proxy(client, credential, key_name):
             return res_obj(
                 KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
-        raise ex
-        print "\n Exception occurred under get_key_proxy", ex
+        logger.error("\n Exception occurred under get_key_proxy" + str(ex))
+        print ex
         type_, exception_str, traceback = sys.exc_info()
         # return res_obj(
         #    KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
@@ -102,7 +105,7 @@ def get_cert_proxy(client, credential, cert_name):
             return res_obj(
                 KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
-        print "\n Exception occurred under get_cert_proxy", ex
+        logger.error("\n Exception occurred under get_cert_proxy" + str(ex))
         type_, exception_str, traceback = sys.exc_info()
         return res_obj(
             KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
@@ -118,7 +121,7 @@ def get_key_attr_proxy(client, credential, key_name):
             return res_obj(
                 KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
-        print "\n Exception occurred under get_key_attr_proxy", ex
+        logger.error("\n Exception occurred under get_key_attr_proxy" + str(ex))
         type_, exception_str, traceback = sys.exc_info()
         return res_obj(
             KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
@@ -134,7 +137,7 @@ def get_cert_attr_proxy(client, credential, cert_name):
             return res_obj(
                 KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
-        print "\n Exception occurred under get_cert_attr_proxy", ex
+        logger.error("\n Exception occurred under get_cert_attr_proxy" + str(ex))
         type_, exception_str, traceback = sys.exc_info()
         return res_obj(
             KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
