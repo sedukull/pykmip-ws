@@ -19,6 +19,7 @@ import base64
 
 logger = KmisLog.getLogger()
 
+
 def extract_request_information():
     remote_address = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     return remote_address
@@ -35,20 +36,25 @@ def check_auth(src, api_key, signature):
         b64_dec_app_key = base64.b64decode(api_key)
         hashed_api_key = generate_hashed_str(b64_dec_app_key)
         msg = ''
-        app_secret = db_obj.get_app_secret(src,hashed_api_key)
+        app_secret = db_obj.get_app_secret(src, hashed_api_key)
         if api_secret:
             for key, values in request.headers.items():
                 msg = msg + str(key) + '=' + str(values)
-            to_verify_signature = sign(msg,app_secret)
+            to_verify_signature = sign(msg, app_secret)
             if to_verify_signature == signature:
                 return True
-        return False    
+        return False
     except Exception as e:
-        logger.error("check auth failed for ip: %s api_key : %s" %(str(src),str(api_key)))
+        logger.error(
+            "check auth failed for ip: %s api_key : %s" %
+            (str(src), str(api_key)))
         return False
 
+
 def sign(msg, secret_key):
-    return base64.b64encode(hmac.new(secret_key, msg=msg, digestmod=hashlib.sha256).digest())
+    return base64.b64encode(
+        hmac.new(secret_key, msg=msg, digestmod=hashlib.sha256).digest())
+
 
 def authenticate(msg):
     """Sends a 401 response that enables basic auth"""
@@ -88,7 +94,11 @@ def verify_app_request(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
         remote_address = extract_request_information()
-        logger.debug("\n === Input Request :%s == IP : %s : ==== " % (str(func.func_name), str(remote_address)))
+        logger.debug(
+            "\n === Input Request :%s == IP : %s : ==== " %
+            (str(
+                func.func_name),
+                str(remote_address)))
         auth = request.authorization
         app_key = auth.username
         app_secret = auth.password

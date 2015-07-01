@@ -25,6 +25,8 @@ from kmis.src.templates.kmis_responses import (CertAttrResponse,
                                                KeyResponse,
                                                CertResponse,
                                                InvalidResponse)
+from kmip.core.enums import KeyFormatType as KeyFormatTypeEnum
+from kmip.core.misc import KeyFormatType
 from kmis.config import (Kms, Misc)
 import os
 import sys
@@ -32,6 +34,7 @@ import traceback
 from kmis.lib.kmis_logger import KmisLog
 
 logger = KmisLog.getLogger()
+
 
 def get_kmip_client():
     client = None
@@ -48,6 +51,7 @@ def get_kmip_client():
         ssl_version=Kms.KMS_SSL_VERSION,
         certfile=Kms.KMS_CLIENT_CERTFILE,
         ca_certs=Kms.KMS_CA_CERTS,
+        keyfile=Kms.KMS_KEY_FILE,
         do_handshake_on_connect=Kms.KMS_HANDSHAKE_ON_CONNECT,
         suppress_ragged_eofs=Kms.KMS_SUPPRESSED_RAGGED_EOFS,
         username=Kms.KMS_USER_NAME,
@@ -75,35 +79,38 @@ def get_id(client, credential, name):
             key_id = ','.join([u.value for u in result.uuids])
     return key_id
 
+def get_key_format_type(key_out_type): 
+    format_type_enum = getattr(KeyFormatTypeEnum, key_out_type, None)
+    key_format_type = KeyFormatType(format_type_enum)
+    return key_format_type
 
-def get_key_proxy(client, credential, key_name):
+def get_key_proxy(client, credential, key_name, key_out_type='PKCS_1'):
     res_obj = KeyResponse()
     try:
         key_id = get_id(client, credential, key_name)
         print "Retrieving Id Successful", key_id
-        kmip_result = client.get(uuid=key_id, credential=credential)
-        print "Retrieving Result Successful", kmip_result
-        res_obj.parse_kmip_response(kmip_result)
+        kmip_result = client.get(uuid=key_id, credential=credential,key_format_type=get_key_format_type(key_out_type))
+        print kmip_result.result_message, kmip_result.result_reason, kmip_result.result_status, kmip_result.secret, kmip_result.uuid
+        res_obj.process_kmip_response(kmip_result)
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
-                KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
+                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
         logger.error("\n Exception occurred under get_key_proxy" + str(ex))
-        print ex
         type_, exception_str, traceback = sys.exc_info()
-        # return res_obj(
-        #    KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
+        return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
 
 
-def get_cert_proxy(client, credential, cert_name):
+def get_cert_proxy(client, credential, cert_name,cert_out_type='PKCS_1'):
     res_obj = CertResponse()
     try:
         cert_id = get_id(client, credential, cert_name)
-        kmip_result = client.get(uuid=cert_id, credential=credential)
-        res_obj.parse_kmip_response(kmip_result)
+        kmip_result = client.get(uuid=cert_id, credential=credential,key_format_type=get_key_format_type(cert_out_type))
+        res_obj.process_kmip_response(kmip_result)
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
-                KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
+                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
         logger.error("\n Exception occurred under get_cert_proxy" + str(ex))
         type_, exception_str, traceback = sys.exc_info()
@@ -116,12 +123,14 @@ def get_key_attr_proxy(client, credential, key_name):
     try:
         key_id = get_id(client, credential, key_name)
         kmip_result = client.get(uuid=key_id, credential=credential)
-        res_obj.parse_kmip_response(kmip_result)
+        res_obj.process_kmip_response(kmip_result)
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
-                KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
+                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
-        logger.error("\n Exception occurred under get_key_attr_proxy" + str(ex))
+        logger.error(
+            "\n Exception occurred under get_key_attr_proxy" +
+            str(ex))
         type_, exception_str, traceback = sys.exc_info()
         return res_obj(
             KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
@@ -132,12 +141,14 @@ def get_cert_attr_proxy(client, credential, cert_name):
     try:
         cert_id = get_id(client, credential, cert_name)
         kmip_result = client.get(uuid=cert_id, credential=credential)
-        res_obj.parse_kmip_response(kmip_result)
+        res_obj.process_kmip_response(kmip_result)
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
-                KmisResponseCodes.SUCCESS_CODE, KmisResponseStatus.SUCCESS, '')
+                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, '')
     except Exception as ex:
-        logger.error("\n Exception occurred under get_cert_attr_proxy" + str(ex))
+        logger.error(
+            "\n Exception occurred under get_cert_attr_proxy" +
+            str(ex))
         type_, exception_str, traceback = sys.exc_info()
         return res_obj(
             KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)

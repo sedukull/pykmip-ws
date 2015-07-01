@@ -6,7 +6,7 @@ __Desc__:Enums\Codes\Messages for KMIS WS
 
 
 class KmisResponseStatus(object):
-    SUCCESSFUL = 'Successful'
+    SUCCESS = 'Successful'
     FAIL = 'Failure'
     ERROR = 'Sorry, kmis errored'
 

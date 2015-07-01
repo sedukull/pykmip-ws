@@ -7,6 +7,7 @@ __Desc__: Provides the configuration information for KMIS.
 import os
 import logging
 
+
 class Misc(object):
     LOG_FOLDER_PATH = '/var/log/kmis/'
 
@@ -36,7 +37,7 @@ class Misc(object):
 
     APP_ROOT = os.path.dirname(os.path.abspath(__file__))
     APP_NAME = "KMIS"
-    LOG_LEVEL = logging.DEBUG 
+    LOG_LEVEL = logging.DEBUG
     TEMPLATE_DIR = os.path.join(APP_ROOT, "src/templates")
 
 
@@ -46,11 +47,11 @@ class Kms(object):
     KMS_PASSWORD = 'P@ssw0rd123'
     KMS_HOST = "10.51.5.46"
     KMS_PORT = "5696"
-    KMS_KEY_FILE = None
+    KMS_KEY_FILE = os.path.join(Misc.APP_ROOT, "deploy/client_new_key.pem")
     KMS_CLIENT_CERTFILE = os.path.join(Misc.APP_ROOT, "deploy/client_cert.crt")
-    KMS_CERT_REQUIRES = "CERT_REQUIRED"
+    KMS_CERT_REQUIRES = "CERT_NONE"
     KMS_SERVER_SIDE = True
-    KMS_SSL_VERSION = "PROTOCOL_SSLv3"
+    KMS_SSL_VERSION = "PROTOCOL_SSLv23"
     KMS_CA_CERTS = os.path.join(Misc.APP_ROOT, "deploy/ca_cert.crt")
     KMS_HANDSHAKE_ON_CONNECT = True
     KMS_SUPPRESSED_RAGGED_EOFS = True

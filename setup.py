@@ -41,7 +41,7 @@ setup(name="kmis",
       url="https://dummyhda.com",
       license="LICENSE.txt",
       include_package_data=True,
-      package_data={'': ['*.txt', '*.html', '*.crt']},
+      package_data={'': ['*.txt', '*.html', '*.crt','*.pem']},
       install_requires=[
           "MySQL-python",
           "flask",

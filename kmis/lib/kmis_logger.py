@@ -38,7 +38,6 @@ class KmisLog(object):
             cls._instance = super(KmisLog, cls).__new__(cls)
             return cls._instance
 
-
     @classmethod
     def getLogger(cls):
         '''
