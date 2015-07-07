@@ -10,7 +10,7 @@ from kmis.src.templates.kmis_enums import (
     KmisResponseTypes,
     KmisResponseCodes,
     KmisResponseStatus)
-
+from kmis.lib.util import log_secret
 
 class KmisResponse(object):
 
@@ -24,12 +24,13 @@ class KmisResponse(object):
 
     def __call__(self, status_code, status_msg, status_desc):
         self.set_default_response_status(status_code, status_msg, status_desc)
+        print "===Response Dict===",self.response_dict
         resp_js = json.dumps(self.response_dict)
         api_resp = Response(
             resp_js,
             status=status_code,
             mimetype=self.response_type)
-        print "===here===",api_resp
+        print "===API Resposne===",api_resp
         self.set_default_header_sec_response(api_resp)
         return api_resp
 
@@ -56,12 +57,10 @@ class KeyResponse(KmisResponse):
         KmisResponse.__init__(self)
 
     def process_kmip_response(self, kmip_server_resp):
-        print kmip_server_resp.result_status.enum,kmip_server_resp.object_type.enum,kmip_server_resp.uuid.value,kmip_server_resp.secret,kmip_server_resp.result_message
         self.response_dict['result']['kmis_status']=str(kmip_server_resp.result_status.enum)
-        self.response_dict['result']['type']=str(kmip_server_resp.object_type.enum)
-        self.response_dict['result']['id']=str(kmip_server_resp.uuid.value)
-        self.response_dict['result']['value']=str(kmip_server_resp.secret)
-        print dir(self.response_dict['result']['value'])
+        #self.response_dict['result']['type']=str(kmip_server_resp.object_type.enum)
+        #self.response_dict['result']['id']=str(kmip_server_resp.uuid.value)
+        self.response_dict['result'].update(log_secret(kmip_server_resp.object_type.enum, kmip_server_resp.secret))
         self.response_dict['result']['kmis_status_message'] = ''
         if kmip_server_resp.result_message:
             self.response_dict['result']['kmis_status_message']=kmip_server_resp.result_message.value
@@ -73,8 +72,13 @@ class KeyAttrResponse(KmisResponse):
         KmisResponse.__init__(self)
 
     def process_kmip_response(self, kmip_server_resp):
-        for key, value in kmip_server_resp.__class__.__dict__.items():
-            self.response_dict['result'][key] = value
+        self.response_dict['result']['kmis_status']=str(kmip_server_resp.result_status.enum)
+        #self.response_dict['result']['type']=str(kmip_server_resp.object_type.enum)
+        #self.response_dict['result']['id']=str(kmip_server_resp.uuid.value)
+        self.response_dict['result'].update(log_secret(kmip_server_resp.object_type.enum, kmip_server_resp.secret))
+        self.response_dict['result']['kmis_status_message'] = ''
+        if kmip_server_resp.result_message:
+            self.response_dict['result']['kmis_status_message']=kmip_server_resp.result_message.value
 
 
 class CertResponse(KmisResponse):
@@ -83,8 +87,13 @@ class CertResponse(KmisResponse):
         KmisResponse.__init__(self)
 
     def process_kmip_response(self, kmip_server_resp):
-        for key, value in kmip_server_resp.__class__.__dict__.items():
-            self.response_dict['result'][key] = value
+        self.response_dict['result']['kmis_status']=str(kmip_server_resp.result_status.enum)
+        #self.response_dict['result']['type']=str(kmip_server_resp.object_type.enum)
+        #self.response_dict['result']['id']=str(kmip_server_resp.uuid.value)
+        self.response_dict['result'].update(log_secret(kmip_server_resp.object_type.enum, kmip_server_resp.secret))
+        self.response_dict['result']['kmis_status_message'] = ''
+        if kmip_server_resp.result_message:
+            self.response_dict['result']['kmis_status_message']=kmip_server_resp.result_message.value
 
 
 class CertAttrResponse(KmisResponse):
@@ -93,8 +102,13 @@ class CertAttrResponse(KmisResponse):
         KmisResponse.__init__(self)
 
     def process_kmip_response(self, kmip_server_resp):
-        for key, value in kmip_server_resp.__class__.__dict__.items():
-            self.response_dict['result'][key] = value
+        self.response_dict['result']['kmis_status']=str(kmip_server_resp.result_status.enum)
+        #self.response_dict['result']['type']=str(kmip_server_resp.object_type.enum)
+        #self.response_dict['result']['id']=str(kmip_server_resp.uuid.value)
+        self.response_dict['result'].update(log_secret(kmip_server_resp.object_type.enum, kmip_server_resp.secret))
+        self.response_dict['result']['kmis_status_message'] = ''
+        if kmip_server_resp.result_message:
+            self.response_dict['result']['kmis_status_message']=kmip_server_resp.result_message.value
 
 
 class InvalidResponse(KmisResponse):

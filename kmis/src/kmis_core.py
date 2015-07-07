@@ -88,9 +88,7 @@ def get_key_proxy(client, credential, key_name, key_out_type='PKCS_1'):
     res_obj = KeyResponse()
     try:
         key_id = get_id(client, credential, key_name)
-        print "Retrieving Id Successful", key_id
         kmip_result = client.get(uuid=key_id, credential=credential,key_format_type=get_key_format_type(key_out_type))
-        print kmip_result.result_message, kmip_result.result_reason, kmip_result.result_status, kmip_result.secret, kmip_result.uuid
         res_obj.process_kmip_response(kmip_result)
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
@@ -102,10 +100,11 @@ def get_key_proxy(client, credential, key_name, key_out_type='PKCS_1'):
             KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
 
 
-def get_cert_proxy(client, credential, cert_name,cert_out_type='PKCS_1'):
+def get_cert_proxy(client, credential, cert_name,cert_out_type='X_509'):
     res_obj = CertResponse()
     try:
         cert_id = get_id(client, credential, cert_name)
+        print "certid",cert_id
         kmip_result = client.get(uuid=cert_id, credential=credential,key_format_type=get_key_format_type(cert_out_type))
         res_obj.process_kmip_response(kmip_result)
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
