@@ -1,16 +1,17 @@
-'''
+"""
 __Author__: Santhosh
 __Desc__: KMIS Server Response Information
 __Version__:1.0
-'''
+"""
 
 from flask import Response
 import json
-from kmis.src.templates.kmis_enums import (
+from kmis.lib.kmis_enums import (
     KmisResponseTypes,
     KmisResponseCodes,
     KmisResponseStatus)
 from kmis.lib.util import log_secret
+
 
 class KmisResponse(object):
 
@@ -24,7 +25,7 @@ class KmisResponse(object):
 
     def __call__(self, status_code, status_msg, status_desc):
         self.set_default_response_status(status_code, status_msg, status_desc)
-        print "===Response Dict===",self.response_dict
+        print "===Response Dict===", self.response_dict
         resp_js = json.dumps(self.response_dict)
         api_resp = Response(
             resp_js,
@@ -54,7 +55,7 @@ class KmisResponse(object):
 class KeyResponse(KmisResponse):
 
     def __init__(self):
-        KmisResponse.__init__(self)
+        super(KeyResponse, self).__init__()
 
     def process_kmip_response(self, kmip_server_resp):
         self.response_dict['result']['kmis_status']=str(kmip_server_resp.result_status.enum)
@@ -69,7 +70,7 @@ class KeyResponse(KmisResponse):
 class KeyAttrResponse(KmisResponse):
 
     def __init__(self):
-        KmisResponse.__init__(self)
+        super(KeyAttrResponse, self).__init__()
 
     def process_kmip_response(self, kmip_server_resp):
         self.response_dict['result']['kmis_status']=str(kmip_server_resp.result_status.enum)
@@ -84,7 +85,7 @@ class KeyAttrResponse(KmisResponse):
 class CertResponse(KmisResponse):
 
     def __init__(self):
-        KmisResponse.__init__(self)
+        super(CertResponse, self).__init__()
 
     def process_kmip_response(self, kmip_server_resp):
         self.response_dict['result']['kmis_status']=str(kmip_server_resp.result_status.enum)
@@ -99,7 +100,7 @@ class CertResponse(KmisResponse):
 class CertAttrResponse(KmisResponse):
 
     def __init__(self):
-        KmisResponse.__init__(self)
+        super(CertAttrResponse, self).__init__()
 
     def process_kmip_response(self, kmip_server_resp):
         self.response_dict['result']['kmis_status']=str(kmip_server_resp.result_status.enum)
@@ -114,8 +115,4 @@ class CertAttrResponse(KmisResponse):
 class InvalidResponse(KmisResponse):
 
     def __init__(self):
-        KmisResponse.__init__(self)
-
-    def process_kmip_response(self, kmip_server_resp):
-        for key, value in kmip_server_resp.__class__.__dict__.items():
-            self.response_dict['result'][key] = value
+        super(InvalidResponse, self).__init__()

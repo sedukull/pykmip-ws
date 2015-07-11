@@ -10,7 +10,7 @@ from kmip.core.factories.attributes import AttributeFactory
 from kmip.core.factories.credentials import CredentialFactory
 from kmip.core.objects import TemplateAttribute, Attribute
 from kmip.services.kmip_client import KMIPProxy
-from kmis.src.templates.kmis_enums import (
+from kmis.lib.kmis_enums import (
     KmisResponseTypes,
     KmisResponseStatus,
     KmisResponseCodes)
@@ -55,7 +55,7 @@ def test_key(key_name='sec-team-rsa'):
 
 #test_key()
 
-def test_cert(cert_name='safenet-sec-team'):
+def test_cert(cert_name='safenet-dev'):
     from kmis.src.kmis_core import get_id, get_kmip_client,get_cert_proxy
     a,b = get_kmip_client()
     get_cert_proxy(a,b,cert_name)

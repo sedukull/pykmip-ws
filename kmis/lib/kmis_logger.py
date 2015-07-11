@@ -1,9 +1,8 @@
-'''
+"""
 @Desc: Module for providing logging facilities to kmis
-'''
+"""
+
 import logging
-import sys
-import time
 import os
 import subprocess
 from logging.handlers import RotatingFileHandler

@@ -2,10 +2,13 @@
 __Author__: Santhosh
 __Version__:1.0
 __Desc__: DB Code for KMIS Solution
- */
+*/
+
 
 DROP DATABASE IF EXISTS `kmis`;
 DROP TABLE IF EXISTS `kmis`.`app_users`;
+DROP TABLE IF EXISTS `kmis`.`app_certs`;
+DROP TABLE IF EXISTS `kmis`.`app_keys`;
 
 CREATE DATABASE `kmis`;
 
@@ -21,14 +24,30 @@ CREATE TABLE `kmis`.`app_users`
    `active` TINYINT default 0,
    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-   PRIMARY KEY ( app_user_id,app_key ),
+   PRIMARY KEY ( app_user_id, app_key ),
    UNIQUE (app_key) 
-)ENGINE = MYISAM;
+)ENGINE = INNODB;
 
-DROP USER 'kmis_db_user'@'localhost';
 
-CREATE USER 'kmis_db_user'@'localhost' IDENTIFIED BY 'UnDetect@ble123!';
+CREATE TABLE `kmis`.`app_certs`
+(
+   `app_key` varchar(255) NOT NULL,
+   `private_key_name` varchar(255) NOT NULL,
+   `ca_cert_name` varchar(255) NOT NULL,
+   `ssl_cert_name` varchar(255) NOT NULL,
+   `format` varchar(32) NOT NULL,
+   `active` TINYINT default 0
+)ENGINE = INNODB;
 
-GRANT ALL PRIVILEGES ON kmis.* TO 'kmis_db_user'@'localhost';
+CREATE TABLE `kmis`.`app_keys`
+(
+   `app_key` varchar(255) NOT NULL,
+   `key_name` varchar(255) NOT NULL,
+   `format` varchar(32) NOT NULL,
+   `active` TINYINT default 0
+)ENGINE = INNODB;
+
+
+GRANT ALL PRIVILEGES ON kmis.* TO 'kmis_db_user'@'localhost' IDENTIFIED BY 'UnDetect@ble123!';
 
 FLUSH PRIVILEGES;

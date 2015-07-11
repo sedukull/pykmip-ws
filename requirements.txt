@@ -1,0 +1,11 @@
+===Following python packages====
+MySQL-python
+flask
+flask-wtf
+gevent
+uwsgi
+
+===Other non python dependencies ====
+nginx
+git
+supervisor

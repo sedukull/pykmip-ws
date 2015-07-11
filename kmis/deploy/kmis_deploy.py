@@ -10,12 +10,12 @@ from fabric.contrib.files import exists
 ### config ###
 ##############
 
-local_app_dir = './flask_project'
+local_app_dir = './kmis_project'
 local_config_dir = './config'
 
 remote_app_dir = '/home/www'
 remote_git_dir = '/home/git'
-remote_flask_dir = remote_app_dir + '/flask_project'
+remote_flask_dir = remote_app_dir + '/kmis_project'
 remote_nginx_dir = '/etc/nginx/sites-enabled'
 remote_supervisor_dir = '/etc/supervisor/conf.d'
 
@@ -54,7 +54,13 @@ def install_flask():
     sudo('pip install gevent')
     sudo('pip install MySQL-python')
     sudo('pip install paramiko')
+    sudo('pip install uwsgi')
+    sudo('pip install gevent')
 
+
+def configure_mysql():
+    sudo("service mysql start")
+    sudo("mysql -uroot < " + "remote_flask_dir/kmis/db/kmis.sql")
 
 def configure_nginx():
     """
@@ -67,13 +73,13 @@ def configure_nginx():
     sudo('/etc/init.d/nginx start')
     if exists('/etc/nginx/sites-enabled/default'):
         sudo('rm /etc/nginx/sites-enabled/default')
-    if exists('/etc/nginx/sites-enabled/flask_project') is False:
-        sudo('touch /etc/nginx/sites-available/flask_project')
-        sudo('ln -s /etc/nginx/sites-available/flask_project' +
-             ' /etc/nginx/sites-enabled/flask_project')
+    if exists('/etc/nginx/sites-enabled/kmis_project') is False:
+        sudo('touch /etc/nginx/sites-available/kmis_project')
+        sudo('ln -s /etc/nginx/sites-available/kmis_project' +
+             ' /etc/nginx/sites-enabled/kmis_project')
     with lcd(local_config_dir):
         with cd(remote_nginx_dir):
-            put('./flask_project', './', use_sudo=True)
+            put('./kmis_project', './', use_sudo=True)
     sudo('/etc/init.d/nginx restart')
 
 
@@ -83,10 +89,10 @@ def configure_supervisor():
     2. Copy local config to remote config
     3. Register new command
     """
-    if exists('/etc/supervisor/conf.d/flask_project.conf') is False:
+    if exists('/etc/supervisor/conf.d/kmis_project.conf') is False:
         with lcd(local_config_dir):
             with cd(remote_supervisor_dir):
-                put('./flask_project.conf', './', use_sudo=True)
+                put('./kmis_project.conf', './', use_sudo=True)
                 sudo('supervisorctl reread')
                 sudo('supervisorctl update')
 
@@ -99,8 +105,8 @@ def configure_git():
     if exists(remote_git_dir) is False:
         sudo('mkdir ' + remote_git_dir)
         with cd(remote_git_dir):
-            sudo('mkdir flask_project.git')
-            with cd('flask_project.git'):
+            sudo('mkdir kmis_project.git')
+            with cd('kmis_project.git'):
                 sudo('git init --bare')
                 with lcd(local_config_dir):
                     with cd('hooks'):
@@ -111,7 +117,7 @@ def configure_git():
 def run_app():
     """ Run the app! """
     with cd(remote_flask_dir):
-        sudo('supervisorctl start flask_project')
+        sudo('supervisorctl start kmis_project')
 
 
 def deploy():
@@ -124,7 +130,7 @@ def deploy():
         commit_message = prompt("Commit message?")
         local('git commit -am "{0}"'.format(commit_message))
         local('git push production master')
-        sudo('supervisorctl restart flask_project')
+        sudo('supervisorctl restart kmis_project')
 
 
 def rollback():
@@ -135,7 +141,7 @@ def rollback():
     with lcd(local_app_dir):
         local('git revert master  --no-edit')
         local('git push production master')
-        sudo('supervisorctl restart flask_project')
+        sudo('supervisorctl restart kmis_project')
 
 
 def status():

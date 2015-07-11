@@ -1,8 +1,8 @@
-'''
+"""
 __Author__:Santhosh
 __Version__:1.0
 __Desc__: Provides the configuration information for KMIS.
-'''
+"""
 
 import os
 import logging

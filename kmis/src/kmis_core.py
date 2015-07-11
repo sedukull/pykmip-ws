@@ -1,23 +1,17 @@
-'''
-__Author__ : Santhosh
+"""
+__Author__ : Santhosh Kumar Edukulla
 __Version__: 1.0
 __Desc__   : Provides proxy interfaces to underlying kmip libraries.
-'''
+"""
 
-from kmip.core.enums import AttributeType
 from kmip.core.enums import CredentialType
-from kmip.core.enums import ObjectType
 from kmip.core.enums import ResultStatus
-from kmip.core.enums import CryptographicAlgorithm
-from kmip.core.enums import CryptographicUsageMask
 from kmip.core.enums import NameType
 from kmip.core.attributes import Name
-from kmip.core.factories.attributes import AttributeFactory
 from kmip.core.factories.credentials import CredentialFactory
-from kmip.core.objects import TemplateAttribute, Attribute
+from kmip.core.objects import Attribute
 from kmip.services.kmip_client import KMIPProxy
-from kmis.src.templates.kmis_enums import (
-    KmisResponseTypes,
+from kmis.lib.kmis_enums import (
     KmisResponseStatus,
     KmisResponseCodes)
 from kmis.src.templates.kmis_responses import (CertAttrResponse,
@@ -27,17 +21,32 @@ from kmis.src.templates.kmis_responses import (CertAttrResponse,
                                                InvalidResponse)
 from kmip.core.enums import KeyFormatType as KeyFormatTypeEnum
 from kmip.core.misc import KeyFormatType
-from kmis.config import (Kms, Misc)
-import os
+from kmis.config import (Kms)
 import sys
-import traceback
+from functools import wraps
+from kmis.lib.kmis_enums import (KmisKeyFormatType,KmisResponseDescriptions)
 from kmis.lib.kmis_logger import KmisLog
+from kmis.src.kmis_dal import KmisDb
+from kmis.lib.util import get_auth_details
 
 logger = KmisLog.getLogger()
 
 
+def handle_app_error(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        invalid_res_obj = InvalidResponse()
+        try:
+            return func(*args, **kwargs)
+        except Exception,ex:
+            logger.error("\n Exception occurred under : %s . Exception String: %s"%(func.__name__, str(ex)))
+            type_, exception_str, traceback = sys.exc_info()
+            return invalid_res_obj(
+                KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
+    return decorated_function
+
+
 def get_kmip_client():
-    client = None
     credential_factory = CredentialFactory()
     credential_type = CredentialType.USERNAME_AND_PASSWORD
     credential_value = {
@@ -56,7 +65,8 @@ def get_kmip_client():
         suppress_ragged_eofs=Kms.KMS_SUPPRESSED_RAGGED_EOFS,
         username=Kms.KMS_USER_NAME,
         password=Kms.KMS_PASSWORD)
-    client.open()
+    if client:
+        client.open()
     return (client, credential)
 
 
@@ -84,70 +94,138 @@ def get_key_format_type(key_out_type):
     key_format_type = KeyFormatType(format_type_enum)
     return key_format_type
 
-def get_key_proxy(client, credential, key_name, key_out_type='PKCS_1'):
+def get_key_proxy(key_name):
     res_obj = KeyResponse()
-    try:
-        key_id = get_id(client, credential, key_name)
+    kmis_db_obj = KmisDb()
+    key_out_type = KmisKeyFormatType.PKCS_1
+    app_id, app_secret = get_auth_details()
+    ret = kmis_db_obj.verify_and_get_app_key_info(app_id, key_name)
+    if ret is not None:
+        key_out_type = ret
+    else:
+        return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_KEY)
+    (client, credential) = get_kmip_client()
+    key_id = get_id(client, credential, key_name)
+    if key_id:
         kmip_result = client.get(uuid=key_id, credential=credential,key_format_type=get_key_format_type(key_out_type))
+        close_kmip_proxy(client)
         res_obj.process_kmip_response(kmip_result)
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
-                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, '')
-    except Exception as ex:
-        logger.error("\n Exception occurred under get_key_proxy" + str(ex))
-        type_, exception_str, traceback = sys.exc_info()
+                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS,  KmisResponseDescriptions.SUCCESS)
+    else:
         return res_obj(
-            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_KEY)
 
 
-def get_cert_proxy(client, credential, cert_name,cert_out_type='X_509'):
+@handle_app_error
+def get_cert_proxy(cert_name):
     res_obj = CertResponse()
-    try:
-        cert_id = get_id(client, credential, cert_name)
-        print "certid",cert_id
+    #First retrieve the certificate details viz., format, ca cert, private key details etc.
+    cert_out_type = KmisKeyFormatType.X_509
+    ca_cert = None
+    private_key = None
+    kmis_db_obj = KmisDb()
+    app_id, app_secret = get_auth_details()
+    ret = kmis_db_obj.verify_and_get_app_cert_info(app_id, cert_name)
+    if ret is not None:
+        cert_out_type = ret['format']
+        ca_cert_name = ret['ca_cert_name']
+        private_key_name = ret['private_key_name']
+    else:
+        return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
+    #Step1: Retrieve private key
+    #Step2: Retrieve CA cert
+    #Step3: Retrieve SSL Cert
+    (client, credential) = get_kmip_client()
+    cert_id = get_id(client, credential, cert_name)
+    if cert_id:
         kmip_result = client.get(uuid=cert_id, credential=credential,key_format_type=get_key_format_type(cert_out_type))
+        close_kmip_proxy(client)
         res_obj.process_kmip_response(kmip_result)
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
-                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, '')
-    except Exception as ex:
-        logger.error("\n Exception occurred under get_cert_proxy" + str(ex))
-        type_, exception_str, traceback = sys.exc_info()
+                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS,  KmisResponseDescriptions.SUCCESS)
+    else:
         return res_obj(
-            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
 
 
-def get_key_attr_proxy(client, credential, key_name):
+@handle_app_error
+def get_ca_cert_proxy(ca_cert_name):
+    res_obj = CertResponse()
+    #First retrieve the certificate details viz., format, ca cert, private key details etc.
+    cert_out_type=KmisKeyFormatType.X_509
+    kmis_db_obj = KmisDb()
+    app_id, app_secret = get_auth_details()
+    ret = kmis_db_obj.verify_and_get_app_ca_cert_info(app_id, ca_cert_name)
+    if ret is not None:
+        cert_out_type = ret['format']
+    else:
+        return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
+    (client, credential) = get_kmip_client()
+    cert_id = get_id(client, credential, ca_cert_name)
+    if cert_id:
+        kmip_result = client.get(uuid=cert_id, credential=credential,key_format_type=get_key_format_type(cert_out_type))
+        close_kmip_proxy(client)
+        res_obj.process_kmip_response(kmip_result)
+        if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
+            return res_obj(
+                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS,  KmisResponseDescriptions.SUCCESS)
+    else:
+        return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
+
+
+@handle_app_error
+def get_key_attr_proxy(key_name):
     res_obj = KeyAttrResponse()
-    try:
-        key_id = get_id(client, credential, key_name)
-        kmip_result = client.get(uuid=key_id, credential=credential)
+    key_out_type= KmisKeyFormatType.PKCS_1
+    kmis_db_obj = KmisDb()
+    app_id, app_secret = get_auth_details()
+    ret = kmis_db_obj.verify_and_get_app_key_info(app_id, key_name)
+    if ret is not None:
+        key_out_type = ret['format']
+    else:
+        return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
+    (client, credential) = get_kmip_client()
+    key_id = get_id(client, credential, key_name)
+    if key_id:
+        kmip_result = client.get(uuid=key_id, credential=credential, key_format_type=get_key_format_type(key_out_type))
+        close_kmip_proxy(client)
         res_obj.process_kmip_response(kmip_result)
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
-                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, '')
-    except Exception as ex:
-        logger.error(
-            "\n Exception occurred under get_key_attr_proxy" +
-            str(ex))
-        type_, exception_str, traceback = sys.exc_info()
+                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, KmisResponseDescriptions.SUCCESS)
+    else:
         return res_obj(
-            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
 
 
-def get_cert_attr_proxy(client, credential, cert_name):
+@handle_app_error
+def get_cert_attr_proxy(cert_name):
     res_obj = CertAttrResponse()
-    try:
-        cert_id = get_id(client, credential, cert_name)
-        kmip_result = client.get(uuid=cert_id, credential=credential)
-        res_obj.process_kmip_response(kmip_result)
-        if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
-            return res_obj(
-                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, '')
-    except Exception as ex:
-        logger.error(
-            "\n Exception occurred under get_cert_attr_proxy" +
-            str(ex))
-        type_, exception_str, traceback = sys.exc_info()
+    cert_out_type = KmisKeyFormatType.X_509
+    kmis_db_obj = KmisDb()
+    app_id, app_secret = get_auth_details()
+    ret = kmis_db_obj.verify_and_get_app_ca_cert_info(app_id, cert_name)
+    if ret is not None:
+        cert_out_type = ret['format']
+    else:
         return res_obj(
-            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, exception_str)
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
+    (client, credential) = get_kmip_client()
+    cert_id = get_id(client, credential, cert_name)
+    kmip_result = client.get(uuid=cert_id, credential=credential, key_format_type=get_key_format_type(cert_out_type))
+    close_kmip_proxy(client)
+    res_obj.process_kmip_response(kmip_result)
+    if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
+        return res_obj(
+            KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS,  KmisResponseDescriptions.SUCCESS)
+    else:
+        return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)

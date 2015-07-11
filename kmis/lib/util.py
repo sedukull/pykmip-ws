@@ -1,42 +1,22 @@
-'''
-__Author__:Santhosh
-__Version__:1.0
-__Desc__ :  Helper utilities
-'''
+"""
+__Author__: Santhosh Kumar Edukulla
+__Version__: 1.0
+__Desc__ :  Helper utilities for other kmis components
+"""
 
 from functools import wraps
-from datetime import datetime
-from flask import g, flash, Response, redirect, url_for, request
-import base64
+from flask import request
 import random
-import hashlib
 import hmac
 import hashlib
 import base64
 import binascii
-
-from kmip.core.attributes import CryptographicAlgorithm
-from kmip.core.attributes import CryptographicLength
-from kmip.core.enums import AttributeType
-from kmip.core.enums import CertificateTypeEnum
-from kmip.core.enums import CryptographicAlgorithm as CryptoAlgorithmEnum
-from kmip.core.enums import CryptographicUsageMask
 from kmip.core.enums import ObjectType
-from kmip.core.enums import Operation
-from kmip.core.enums import SecretDataType
 from kmis.src.kmis_dal import KmisDb
 from kmis.config import Misc
 from kmis.lib.kmis_logger import KmisLog
-from kmip.core.factories.attributes import AttributeFactory
-from kmip.core.misc import KeyFormatType
-from kmip.core.objects import KeyBlock
-from kmip.core.objects import KeyMaterial
-from kmip.core.objects import KeyValue
-from kmip.core.secrets import Certificate
-from kmip.core.secrets import PrivateKey
-from kmip.core.secrets import PublicKey
-from kmip.core.secrets import SymmetricKey
-from kmip.core.secrets import SecretData
+from kmis.lib.kmis_enums import KmisResponseTypes
+import json
 
 logger = KmisLog.getLogger()
 
@@ -45,30 +25,39 @@ def extract_request_information():
     remote_address = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     return remote_address
 
+def get_data_from_request():
+    if request.headers['Content-Type'] == KmisResponseTypes.KMIS_RESP_TYPE:
+        jdata = json.loads(request.data)
+    if not request.json:
+        return False
+    return jdata
+
 
 def check_auth(src, api_key, signature):
-    """This function is called to check if a username /
-            password combination is valid.
+    """
+    This function is called to check
+    if API Key or Signature sent as part of request is valid.
     """
     try:
         return True
-        # Stub for decrypt(username,password)
+        # Stub to decrypt(api_key, signature)
         db_obj = KmisDb()
         b64_dec_app_key = base64.b64decode(api_key)
+        b64_dec_signature = base64.b64decode(signature)
         hashed_api_key = generate_hashed_str(b64_dec_app_key)
         msg = ''
         app_secret = db_obj.get_app_secret(src, hashed_api_key)
-        if api_secret:
+        if app_secret:
             for key, values in request.headers.items():
                 msg = msg + str(key) + '=' + str(values)
-            to_verify_signature = sign(msg, app_secret)
-            if to_verify_signature == signature:
+            calculated_signature = sign(msg, app_secret)
+            if calculated_signature == b64_dec_signature:
                 return True
         return False
     except Exception as e:
         logger.error(
-            "check auth failed for ip: %s api_key : %s" %
-            (str(src), str(api_key)))
+            "Invalid API Key or Signature ip: %s api_key : %s. Exception  : %s" %
+            (str(src), str(api_key), str(e)))
         return False
 
 
@@ -76,83 +65,52 @@ def sign(msg, secret_key):
     return base64.b64encode(
         hmac.new(secret_key, msg=msg, digestmod=hashlib.sha256).digest())
 
-
-def authenticate(msg):
-    """Sends a 401 response that enables basic auth"""
-    print msg
-    return Response(msg, status=401)
-
-
 def generate_hashed_str(inp_str):
     return base64.b64encode(hashlib.sha512(str(inp_str) + str(random.getrandbits(512)) + Misc.PASS_PHRASE).digest(), base64.b64encode(
         hashlib.sha512(str(random.getrandbits(512))).digest(), random.choice(['rA', 'aZ', 'gQ', 'hH', 'hG', 'aR', 'DD'])).rstrip('=='))
 
 
-def verify_kms_cred_info(func):
-    @wraps(func)
-    def decorated_function(*args, **kwargs):
-        remote_address = extract_request_information()
-        print "\n === Input Request %s == IP : %s : ==== " % (str(func), str(remote_address))
-        if (not request.form["app_key"]) or (not request.form["app_secret"]):
-            print "\n === Invalid KMS Username and Password ==== "
-            return authenticate('Invalid KMS Username and Password')
-        else:
-            print "\n === Valid KMS username and password ==== "
-            return func(*args, **kwargs)
-    return decorated_function
-
-
-def log_input_request(func):
-    @wraps(func)
-    def decorated_function(*args, **kwargs):
-        remote_address = extract_request_information()
-        print "\n === Input Request %s from IP : %s : ==== " % (str(func), str(remote_address))
-        return func(*args, **kwarg)
-    return decorated_function
-
+def get_auth_details():
+    auth = request.authorization
+    app_key = auth.username
+    app_secret = auth.password
+    return app_key, app_secret
 
 def verify_app_request(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
+        invalid_resp = True
         remote_address = extract_request_information()
         logger.debug(
-            "\n === Input Request :%s == IP : %s : ==== " %
+            " === Input Request :%s == IP : %s : ==== " %
             (str(
-                func.func_name),
+                func.__func__),
                 str(remote_address)))
-        auth = request.authorization
-        app_key = auth.username
-        app_secret = auth.password
+        app_key, app_secret = get_auth_details()
         if (not app_key) or (not app_secret) or (
                 check_auth(remote_address, app_key, app_secret) is False):
-            return authenticate('Invalid app key or app secret')
+            invalid_resp_msg = "Kmis Authentication Failed. Please check the API Key or Signature"
         else:
+            jdata = get_data_from_request()
+        if jdata is False:
+            invalid_resp_msg = "Invalid Input Json Data. Please Check"
+        if invalid_resp:
+            kwargs['invalid_response'] = invalid_resp_msg
+        else:
+            kwargs['app_id'] = app_key
+            kwargs["jdata"] = jdata
             return func(*args, **kwargs)
     return decorated_function
-
-
-def verify_app_auth(func):
-    @wraps(func)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if (not auth) or (not auth.username) or (not auth.password) or (
-                not check_auth(auth.username, auth.password)):
-            return authenticate("Invalid App Credentials")
-        return func(*args, **kwargs)
-    return decorated
 
 
 def log_template_attribute(template_attribute):
     names = template_attribute.names
     attributes = template_attribute.attributes
-
     logger.info('number of template attribute names: {0}'.format(len(names)))
     for i in range(len(names)):
         name = names[i]
         logger.info('name {0}: {1}'.format(i, name))
-
     log_attribute_list(attributes)
-
 
 def log_attribute_list(attributes):
     attr_dict = {}
@@ -174,11 +132,10 @@ def log_secret(secret_type, secret_value):
     else:
         logger.info('generic secret: {0}'.format(secret_value))
 
-
 def log_certificate(certificate):
     cert_info = {}
     cert_info['cert_type'] = certificate.certificate_type
-    cert_info['cert_value']= binascii.hexlify(certificate.certificate_value.value)
+    cert_info['cert_value'] = binascii.hexlify(certificate.certificate_value.value)
     return cert_info
 
 
@@ -216,4 +173,3 @@ def log_key_block(key_block):
         return key_info
     else:
         logger.info('key block: {0}'.format(key_block))
-
