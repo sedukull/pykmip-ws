@@ -70,7 +70,7 @@ class KmisDb(object):
             return None
 
     def verify_app_cred(self, src, app_hashed_key, app_hashed_password):
-        with(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
+        with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
             cur.execute(
                 'select app_key, app_pass_phrase, active from `kmis`.`app_users`')
         for row in cur.fetchall():
@@ -82,8 +82,8 @@ class KmisDb(object):
 
     def verify_and_get_app_ca_cert_info(self, app_id, ca_cert_name):
         ret = {}
-        with(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
-            cur.execute('select private_key_name, ca_cert_name, ssl_cert_name, format, active from `kmis`.`app_certs`')
+        with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
+            cur.execute('select app_key, private_key_name, ca_cert_name, ssl_cert_name, format, active from `kmis`.`app_certs`')
             for row in cur.fetchall():
                 if row['app_key'] == app_id and row['ca_cert_name'] == ca_cert_name and row['active'] == 1:
                     ret['format'] = row['format']

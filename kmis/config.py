@@ -39,6 +39,11 @@ class Misc(object):
     APP_NAME = "KMIS"
     LOG_LEVEL = logging.DEBUG
     TEMPLATE_DIR = os.path.join(APP_ROOT, "src/templates")
+    COMPRESS_PASSWD = "Hd@GreatC0mp@n!!"
+    COMPRESS_OUT_PATH = "/var/kmis/compress/out/"
+    COMPRESS_INP_PATH = "/var/kmis/compress/inp/"
+    COMPRESS_LEVEL = 1
+    COMPRESS_ENABLED = True
 
 
 class Kms(object):

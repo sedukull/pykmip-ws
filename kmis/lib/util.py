@@ -17,9 +17,22 @@ from kmis.config import Misc
 from kmis.lib.kmis_logger import KmisLog
 from kmis.lib.kmis_enums import KmisResponseTypes
 import json
+from pyminizip import compress
+import uuid
+import os
 
 logger = KmisLog.getLogger()
 
+def compress(inp_buf):
+    try:
+        out_file = str(uuid.uuid4())
+        open(Misc.INP_PATH + "/" + out_file).write(inp_buf)
+        compress(Misc.COMPRESS_INP_PATH+"/"+out_file, Misc.COMPRESS_OUT_PATH + "/" + out_file, Misc.COMPRESS_PASSWD, Misc.COMPRESS_LEVEL)
+        return Misc.COMPRESS_OUT_PATH + "/" + out_file
+        os.remove(Misc.INP_PATH + "/" + out_file)
+    except Exception, ex:
+        logger.error("Failed Compressing input: %s"%str(ex))
+        return False
 
 def extract_request_information():
     remote_address = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
@@ -45,14 +58,14 @@ def check_auth(src, api_key, signature):
         b64_dec_app_key = base64.b64decode(api_key)
         b64_dec_signature = base64.b64decode(signature)
         hashed_api_key = generate_hashed_str(b64_dec_app_key)
-        msg = ''
         app_secret = db_obj.get_app_secret(src, hashed_api_key)
         if app_secret:
-            for key, values in request.headers.items():
-                msg = msg + str(key) + '=' + str(values)
-            calculated_signature = sign(msg, app_secret)
+            string_to_sign = str(request.url) + \
+                             str(request.method) + str(request.headers.get("Content-Type")) + \
+                             str(request.headers.get("Content-MD5")) + str(request.data)
+            calculated_signature = sign(string_to_sign, app_secret)
             if calculated_signature == b64_dec_signature:
-                return True
+                return hashed_api_key
         return False
     except Exception as e:
         logger.error(
@@ -68,7 +81,6 @@ def sign(msg, secret_key):
 def generate_hashed_str(inp_str):
     return base64.b64encode(hashlib.sha512(str(inp_str) + str(random.getrandbits(512)) + Misc.PASS_PHRASE).digest(), base64.b64encode(
         hashlib.sha512(str(random.getrandbits(512))).digest(), random.choice(['rA', 'aZ', 'gQ', 'hH', 'hG', 'aR', 'DD'])).rstrip('=='))
-
 
 def get_auth_details():
     auth = request.authorization
@@ -87,9 +99,10 @@ def verify_app_request(func):
                 func.__func__),
                 str(remote_address)))
         app_key, app_secret = get_auth_details()
-        if (not app_key) or (not app_secret) or (
-                check_auth(remote_address, app_key, app_secret) is False):
-            invalid_resp_msg = "Kmis Authentication Failed. Please check the API Key or Signature"
+        if (not app_key) or (not app_secret):
+            ret =  check_auth(remote_address, app_key, app_secret)
+            if ret is False:
+                invalid_resp_msg = "Kmis Authentication Failed. Please check the API Key or Signature"
         else:
             jdata = get_data_from_request()
         if jdata is False:
@@ -97,8 +110,8 @@ def verify_app_request(func):
         if invalid_resp:
             kwargs['invalid_response'] = invalid_resp_msg
         else:
-            kwargs['app_id'] = app_key
-            kwargs["jdata"] = jdata
+            kwargs['app_id'] = ret
+            kwargs['jdata'] = jdata
             return func(*args, **kwargs)
     return decorated_function
 
@@ -119,7 +132,7 @@ def log_attribute_list(attributes):
         attribute_name = attribute.attribute_name
         attribute_index = attribute.attribute_index
         attribute_value = attribute.attribute_value
-        attr_dict[i]=[attribute_name,attribute_index,repr(attribute_value)]
+        attr_dict[i]=[attribute_name, attribute_index,repr(attribute_value)]
     return attr_dict
 
 def log_secret(secret_type, secret_value):
@@ -134,7 +147,7 @@ def log_secret(secret_type, secret_value):
 
 def log_certificate(certificate):
     cert_info = {}
-    cert_info['cert_type'] = certificate.certificate_type
+    cert_info['cert_type'] = str(certificate.certificate_type)
     cert_info['cert_value'] = binascii.hexlify(certificate.certificate_value.value)
     return cert_info
 
@@ -158,7 +171,6 @@ def log_key_block(key_block):
         cryptographic_algorithm = key_block.cryptographic_algorithm
         cryptographic_length = key_block.cryptographic_length
         key_wrapping_data = key_block.key_wrapping_data
-        #print "==============",key_format_type.read(),key_compression_type.read(),cryptographic_length.read(),cryptographic_algorithm.read()
         key_info['key_format_type'] = str(key_format_type)
         key_info['key_compression_type'] = str(key_compression_type)
         key_info['cryptographic_algorithm'] = str(cryptographic_algorithm)
@@ -171,5 +183,3 @@ def log_key_block(key_block):
         attr_dict = log_attribute_list(attributes)
         key_info.update(attr_dict)
         return key_info
-    else:
-        logger.info('key block: {0}'.format(key_block))

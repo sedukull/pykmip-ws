@@ -48,17 +48,19 @@ client.open()
 print (client, credential)
 '''
 # get_id(client,credential,'sec-team-rsa')
-def test_key(key_name='sec-team-rsa'):
-    from kmis.src.kmis_core import get_id, get_kmip_client,get_key_proxy
-    a,b = get_kmip_client()
-    get_key_proxy(a,b,key_name)
 
-#test_key()
+
+def test_key(key_name='sec-team-rsa'):
+    from kmis.src.kmis_core import get_id, get_kmip_client, get_key_proxy
+    a, b = get_kmip_client()
+    get_key_proxy(a, b, key_name)
+
+# test_key()
+
 
 def test_cert(cert_name='safenet-dev'):
-    from kmis.src.kmis_core import get_id, get_kmip_client,get_cert_proxy
-    a,b = get_kmip_client()
-    get_cert_proxy(a,b,cert_name)
+    from kmis.src.kmis_core import get_id, get_kmip_client, get_cert_proxy
+    a, b = get_kmip_client()
+    get_cert_proxy(a, b, cert_name)
 
 test_cert()
-

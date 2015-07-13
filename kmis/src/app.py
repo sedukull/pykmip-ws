@@ -14,12 +14,20 @@ from kmis.lib.kmis_enums import (
 import urllib
 from kmis.lib.kmis_enums import KmisVersion
 
+
 kmis_app = Flask(Misc.APP_NAME, template_folder=Misc.TEMPLATE_DIR)
 
 # Application Logger
 obj_log = KmisLog()
 obj_log(kmis_app)
 
+def create_compress_paths():
+    if not os.path.isdir(Misc.COMPRESS_INP_PATH):
+        os.makedirs(Misc.COMPRESS_INP_PATH, mode=0777)
+    if not os.path.isdir(Misc.COMPRESS_OUT_PATH):
+        os.makedirs(Misc.COMPRESS_OUT_PATH, mode=0777)
+
+create_compress_paths()
 
 @kmis_app.route('/index/<version>', methods=("GET",))
 def index(version):

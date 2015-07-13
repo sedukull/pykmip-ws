@@ -4,6 +4,8 @@ flask
 flask-wtf
 gevent
 uwsgi
+pyminizip
+requests
 
 ===Other non python dependencies ====
 nginx

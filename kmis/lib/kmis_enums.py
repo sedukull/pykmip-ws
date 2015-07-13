@@ -6,9 +6,9 @@ __Desc__:Enums\Codes\Messages for KMIS WS
 
 
 class KmisResponseStatus(object):
-    SUCCESS = 'Successful'
-    FAIL = 'Failure'
-    ERROR = 'Sorry, kmis errored'
+    SUCCESS = 'SUCCESS'
+    FAIL = 'FAIL'
+    ERROR = 'ERROR'
 
 
 class KmisResponseTypes(object):
@@ -22,8 +22,9 @@ class KmisResponseCodes(object):
 
 class KmisResponseDescriptions(object):
     INVALID_KEY = " Invalid Key provided. Please check"
-    INVALID_CERT = " Invalid Certificate provided. Please check"
-    SUCCESS = "Successful retrieval of key"
+    INVALID_CERT = " Invalid Key\Certificate name provided. Please check"
+    SUCCESS = "Successful retrieval of key or Cert"
+    INVALID_KEY_CERT = " Invalid Key\Certificate name provided. Please check"
 
 class KmisVersion(object):
     V1 = "v1"
