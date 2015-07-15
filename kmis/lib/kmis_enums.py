@@ -1,5 +1,5 @@
 """
-__Author__:Santhosh
+__Author__:Santhosh Kumar Edukulla
 __Version__:1.0
 __Desc__:Enums\Codes\Messages for KMIS WS
 """
@@ -16,15 +16,16 @@ class KmisResponseTypes(object):
 
 
 class KmisResponseCodes(object):
-    FAIL = 408
+    FAIL = 400
     SERVER_ERROR = 500
     SUCCESS = 200
 
 class KmisResponseDescriptions(object):
-    INVALID_KEY = " Invalid Key provided. Please check"
-    INVALID_CERT = " Invalid Key\Certificate name provided. Please check"
+    INVALID_KEY = "Invalid Key provided. Please check"
+    INVALID_CERT = "Invalid Key\Certificate name provided. Please check"
     SUCCESS = "Successful retrieval of key or Cert"
-    INVALID_KEY_CERT = " Invalid Key\Certificate name provided. Please check"
+    INVALID_KEY_CERT = "Invalid Key\Certificate name provided. Please check"
+    OPERATION_FAILED = "Key\Cert Retrieval Operation Failed"
 
 class KmisVersion(object):
     V1 = "v1"

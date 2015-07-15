@@ -27,7 +27,8 @@ def create_compress_paths():
     if not os.path.isdir(Misc.COMPRESS_OUT_PATH):
         os.makedirs(Misc.COMPRESS_OUT_PATH, mode=0777)
 
-create_compress_paths()
+if Misc.COMPRESS_ENABLED:
+    create_compress_paths()
 
 @kmis_app.route('/index/<version>', methods=("GET",))
 def index(version):

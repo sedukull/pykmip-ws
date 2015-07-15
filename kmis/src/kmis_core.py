@@ -35,7 +35,6 @@ logger = KmisLog.getLogger()
 def handle_app_error(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
-
         try:
             return func(*args, **kwargs)
         except Exception,ex:
@@ -125,6 +124,7 @@ def get_cert_proxy(app_id, cert_name):
     res_obj = CertResponse()
     #First retrieve the certificate details viz., format, ca cert, private key details etc.
     cert_out_type = KmisKeyFormatType.X_509
+    key_out_type = KmisKeyFormatType.PKCS_1
     ca_cert = None
     private_key = None
     kmis_db_obj = KmisDb()
@@ -139,19 +139,25 @@ def get_cert_proxy(app_id, cert_name):
     #Step1: Retrieve private key
     #Step2: Retrieve CA cert
     #Step3: Retrieve SSL Cert
+    kmip_result_dir = {}
     (client, credential) = get_kmip_client()
     cert_id = get_id(client, credential, cert_name)
+    ca_cert_id = get_id(client, credential, ca_cert_name)
+    private_key_id = get_id(client, credential, private_key_name)
+    if private_key_id:
+        kmip_result_dir["kmip_private_key_result"] = client.get(uuid=private_key_id, credential=credential, key_format_type=get_key_format_type(key_out_type))
+    if ca_cert_id:
+        kmip_result_dir["kmip_ca_cert_result"] = client.get(uuid=ca_cert_id, credential=credential, key_format_type=get_key_format_type(cert_out_type))
     if cert_id:
-        kmip_result = client.get(uuid=cert_id, credential=credential,key_format_type=get_key_format_type(cert_out_type))
-        close_kmip_proxy(client)
-        res_obj.process_kmip_response(kmip_result)
-        if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
-            return res_obj(
+        kmip_result_dir["kmip_cert_result"] = client.get(uuid=cert_id, credential=credential, key_format_type=get_key_format_type(cert_out_type))
+    close_kmip_proxy(client)
+    ret_status = res_obj.process_kmip_response(kmip_result_dir)
+    if ret_status == KmisResponseCodes.SUCCESS:
+        return res_obj(
                 KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS,  KmisResponseDescriptions.SUCCESS)
     else:
         return res_obj(
-            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
-
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.OPERATION_FAILED)
 
 @handle_app_error
 def get_ca_cert_proxy(app_id, ca_cert_name):
@@ -181,7 +187,7 @@ def get_ca_cert_proxy(app_id, ca_cert_name):
 @handle_app_error
 def get_key_attr_proxy(app_id, key_name):
     res_obj = KeyAttrResponse()
-    key_out_type= KmisKeyFormatType.PKCS_1
+    key_out_type = KmisKeyFormatType.PKCS_1
     kmis_db_obj = KmisDb()
     ret = kmis_db_obj.verify_and_get_app_key_info(app_id, key_name)
     if ret is not None:
@@ -201,7 +207,6 @@ def get_key_attr_proxy(app_id, key_name):
     else:
         return res_obj(
             KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
-
 
 @handle_app_error
 def get_cert_attr_proxy(app_id, cert_name):

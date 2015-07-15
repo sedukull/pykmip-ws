@@ -60,7 +60,7 @@ class KmisDb(object):
     def verify_and_get_app_cert_info(self, app_id, cert_name):
         ret = {}
         with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
-            cur.execute('select private_key_name, ca_cert_name, ssl_cert_name, format, active from `kmis`.`app_certs`')
+            cur.execute('select app_key, private_key_name, ca_cert_name, ssl_cert_name, format, active from `kmis`.`app_certs`')
             for row in cur.fetchall():
                 if row['app_key'] == app_id and row['ssl_cert_name'] == cert_name and row['active'] == 1:
                     ret['format'] = row['format']

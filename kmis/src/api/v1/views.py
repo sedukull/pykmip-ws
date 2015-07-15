@@ -84,7 +84,6 @@ def getKeyAttributes(*args, **kwargs):
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
-
 @kmis_view.route("/cert/", methods=('POST',))
 @verify_app_request
 def getCertificate(*args, **kwargs):
@@ -106,7 +105,7 @@ def getCertificate(*args, **kwargs):
 
 @kmis_view.route("/cacert/", methods=('POST',))
 @verify_app_request
-def getCACertificate(*args,**kwargs):
+def getCACertificate(*args, **kwargs):
     try:
         cert_name = kwargs.get('jdata').get('cert_name', None)
         ret = handle_invalid_resp(kwargs.get('invalid_response', None), cert_name)
