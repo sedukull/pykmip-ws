@@ -13,6 +13,7 @@ from kmis.lib.kmis_enums import (
     KmisResponseCodes)
 import urllib
 from kmis.lib.kmis_enums import KmisVersion
+import pwd,grp
 
 
 kmis_app = Flask(Misc.APP_NAME, template_folder=Misc.TEMPLATE_DIR)
@@ -26,9 +27,23 @@ def create_compress_paths():
         os.makedirs(Misc.COMPRESS_INP_PATH, mode=0777)
     if not os.path.isdir(Misc.COMPRESS_OUT_PATH):
         os.makedirs(Misc.COMPRESS_OUT_PATH, mode=0777)
+    uid = pwd.getpwnam("santhosh.edukulla").pw_uid
+    gid = grp.getgrnam("admin").gr_gid
+    for root, dirs, files in os.walk(Misc.COMPRESS_INP_PATH):
+        for dir in dirs:
+            os.chown(dir, uid, gid)
+            os.chmod(dir, 0777)
+    for root, dirs, files in os.walk(Misc.COMPRESS_OUT_PATH):
+        for dir in dirs:
+            os.chown(dir, uid, gid)
+            os.chmod(dir, 0777)
 
 if Misc.COMPRESS_ENABLED:
     create_compress_paths()
+
+import os, getpass
+print "Env thinks the user is [%s]" % (os.getlogin())
+print "Effective user is [%s]" % (getpass.getuser())
 
 @kmis_app.route('/index/<version>', methods=("GET",))
 def index(version):

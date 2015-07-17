@@ -9,12 +9,12 @@ from flask import (Blueprint)
 from kmis.lib.util import (
     verify_app_request)
 from kmis.src.kmis_core import (
-                                get_key_proxy,
-                                get_key_attr_proxy,
-                                get_cert_proxy,
-                                get_cert_attr_proxy,
-                                get_ca_cert_proxy
-                                )
+    get_key_proxy,
+    get_key_attr_proxy,
+    get_cert_proxy,
+    get_cert_attr_proxy,
+    get_ca_cert_proxy
+)
 from kmis.src.templates.kmis_responses import (CertAttrResponse,
                                                KeyAttrResponse,
                                                KeyResponse,
@@ -32,6 +32,7 @@ from kmis.lib.kmis_logger import KmisLog
 kmis_view = Blueprint('kmis_view_v2', __name__)
 logger = KmisLog.getLogger()
 
+
 def handle_invalid_resp(inp, inp_name):
     invalid_resp_obj = InvalidResponse()
     if inp:
@@ -40,21 +41,31 @@ def handle_invalid_resp(inp, inp_name):
     if not inp_name:
         p = re.compile('[A-Za-z0-9_]')
         if not p.search().group():
-            invalid_resp_obj(KmisResponseStatus.ERROR, KmisResponseStatus.ERROR, KmisResponseDescriptions.INVALID_KEY_CERT)
+            invalid_resp_obj(
+                KmisResponseStatus.ERROR,
+                KmisResponseStatus.ERROR,
+                KmisResponseDescriptions.INVALID_KEY_CERT)
             return invalid_resp_obj
     return None
+
 
 @kmis_view.route("/key/", methods=('POST',))
 @verify_app_request
 def getKey(*args, **kwargs):
     try:
         key_name = kwargs.get('jdata').get('key_name', None)
-        ret = handle_invalid_resp(kwargs.get('invalid_response', None), key_name)
+        ret = handle_invalid_resp(
+            kwargs.get(
+                'invalid_response',
+                None),
+            key_name)
         if not ret:
             app_id = kwargs.get('app_id')
             final_res = get_key_proxy(app_id, key_name)
             temp_obj = KeyResponse(final_res)
-            logger.debug("==== Key : %s retrieval successful ====" % str(key_name))
+            logger.debug(
+                "==== Key : %s retrieval successful ====" %
+                str(key_name))
             return temp_obj(), KmisResponseCodes.SUCCESS
         return ret
     except Exception as ex:
@@ -67,7 +78,11 @@ def getKey(*args, **kwargs):
 def getKeyAttributes(*args, **kwargs):
     try:
         key_name = kwargs.get('jdata').get('key_name', None)
-        ret = handle_invalid_resp(kwargs.get('invalid_response', None), key_name)
+        ret = handle_invalid_resp(
+            kwargs.get(
+                'invalid_response',
+                None),
+            key_name)
         if not ret:
             app_id = kwargs.get('app_id')
             final_res = get_key_attr_proxy(app_id, key_name)
@@ -84,15 +99,18 @@ def getKeyAttributes(*args, **kwargs):
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
-
 @kmis_view.route("/cert/", methods=('POST',))
 @verify_app_request
 def getCertificate(*args, **kwargs):
     try:
         cert_name = kwargs.get('jdata').get('cert_name', None)
-        ret = handle_invalid_resp(kwargs.get('invalid_response', None), cert_name)
+        ret = handle_invalid_resp(
+            kwargs.get(
+                'invalid_response',
+                None),
+            cert_name)
         if not ret:
-            app_id  = kwargs.get('app_id')
+            app_id = kwargs.get('app_id')
             final_res = get_cert_proxy(app_id, cert_name)
             temp_obj = CertResponse(final_res)
             logger.debug(
@@ -104,12 +122,17 @@ def getCertificate(*args, **kwargs):
         logger.error("==== Cert : %s retrieval failed ====" % str(cert_name))
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
+
 @kmis_view.route("/cacert/", methods=('POST',))
 @verify_app_request
-def getCACertificate(*args,**kwargs):
+def getCACertificate(*args, **kwargs):
     try:
         cert_name = kwargs.get('jdata').get('cert_name', None)
-        ret = handle_invalid_resp(kwargs.get('invalid_response', None), cert_name)
+        ret = handle_invalid_resp(
+            kwargs.get(
+                'invalid_response',
+                None),
+            cert_name)
         if not ret:
             app_id = kwargs.get('app_id')
             final_res = get_ca_cert_proxy(app_id, cert_name)
@@ -123,12 +146,17 @@ def getCACertificate(*args,**kwargs):
         logger.error("====CA Cert : %s retrieval failed ====" % str(cert_name))
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
+
 @kmis_view.route("/cert/attributes/", methods=('POST',))
 @verify_app_request
 def getCertificateAttributes(*args, **kwargs):
     try:
         cert_name = kwargs.get('jdata').get('cert_name', None)
-        ret = handle_invalid_resp(kwargs.get('invalid_response', None), cert_name)
+        ret = handle_invalid_resp(
+            kwargs.get(
+                'invalid_response',
+                None),
+            cert_name)
         if not ret:
             app_id = kwargs.get('app_id')
             final_res = get_cert_attr_proxy(app_id, cert_name)
@@ -150,7 +178,11 @@ def getCertificateAttributes(*args, **kwargs):
 def getCertStatus(*args, **kwargs):
     try:
         cert_name = kwargs.get('jdata').get('cert_name', None)
-        ret = handle_invalid_resp(kwargs.get('invalid_response', None), cert_name)
+        ret = handle_invalid_resp(
+            kwargs.get(
+                'invalid_response',
+                None),
+            cert_name)
         if not ret:
             app_id = kwargs.get('app_id')
             return "Active", 200
@@ -176,6 +208,7 @@ def getKeyStatus(*args, **kwargs):
             str(key_name))
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
+
 @kmis_view.route("/register/", methods=('POST',))
 @verify_app_request
 def register(*args, **kwargs):
@@ -190,15 +223,16 @@ def register(*args, **kwargs):
             str(ex))
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
+
 @kmis_view.route("/listall/status/", methods=('POST',))
 @verify_app_request
 def listAll(*args, **kwargs):
     try:
         ret = handle_invalid_resp(kwargs.get('invalid_response'))
         if not ret:
-            #For Each Key,Cert, build a response structure with name, start date, end date, issuer information, common name,archival date, expirty date
-            #Get all Keys/Certs
-            #return the structure
+            # For Each Key,Cert, build a response structure with name, start date, end date, issuer information, common name,archival date, expirty date
+            # Get all Keys/Certs
+            # return the structure
             return "Active", 200
         return ret
     except Exception as ex:

@@ -1,5 +1,5 @@
 """
-__Author__:Santhosh
+__Author__:Santhosh Kumar Edukulla
 __Version__:1.0
 __Desc__: Provides the configuration information for KMIS.
 """
@@ -40,8 +40,8 @@ class Misc(object):
     LOG_LEVEL = logging.DEBUG
     TEMPLATE_DIR = os.path.join(APP_ROOT, "src/templates")
     COMPRESS_PASSWD = "Hd@GreatC0mp@n!!"
-    COMPRESS_OUT_PATH = "/var/kmis/compress/out/"
-    COMPRESS_INP_PATH = "/var/kmis/compress/inp/"
+    COMPRESS_OUT_PATH = "/var/kmis/compress_dir/zip_files/"
+    COMPRESS_INP_PATH = "/var/kmis/compress_dir/json_files/"
     COMPRESS_LEVEL = 1
     COMPRESS_ENABLED = True
 
@@ -61,7 +61,6 @@ class Kms(object):
     KMS_HANDSHAKE_ON_CONNECT = True
     KMS_SUPPRESSED_RAGGED_EOFS = True
 
-
 class Dev(object):
     DB_HOST = 'localhost'
     DB_USER = 'kmis_db_user'
@@ -70,7 +69,6 @@ class Dev(object):
     KMIS_APP_PORT = 5000
     KMIS_APP_IP = 'localhost'
     DEBUG = True
-
 
 class Prod(object):
     DB_HOST = 'localhost'
