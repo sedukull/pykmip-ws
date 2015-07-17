@@ -27,30 +27,30 @@ class Misc(object):
 
     # Use a secure, unique and absolutely secret key for
     # signing the data.
-    CSRF_SESSION_KEY = "N0t@Decided"
+    CSRF_SESSION_KEY = ""
 
     # Secret key for signing cookies
-    SECRET_KEY = "N0t@Decided"
+    SECRET_KEY = ""
 
     # Pass Phrase
-    PASS_PHRASE = "Hd@GreatC0mp@n!!"
+    PASS_PHRASE = ""
 
     APP_ROOT = os.path.dirname(os.path.abspath(__file__))
     APP_NAME = "KMIS"
     LOG_LEVEL = logging.DEBUG
     TEMPLATE_DIR = os.path.join(APP_ROOT, "src/templates")
-    COMPRESS_PASSWD = "Hd@GreatC0mp@n!!"
+    COMPRESS_PASSWD = ""
     COMPRESS_OUT_PATH = "/var/kmis/compress_dir/zip_files/"
     COMPRESS_INP_PATH = "/var/kmis/compress_dir/json_files/"
     COMPRESS_LEVEL = 1
-    COMPRESS_ENABLED = True
+    COMPRESS_ENABLED = False
 
 
 class Kms(object):
-    KMS_CLUSTER_ENDPOINT = '10.51.5.46'
-    KMS_USER_NAME = 'test_app'
-    KMS_PASSWORD = 'P@ssw0rd123'
-    KMS_HOST = "10.51.5.46"
+    KMS_CLUSTER_ENDPOINT = ''
+    KMS_USER_NAME = ''
+    KMS_PASSWORD = ''
+    KMS_HOST = ""
     KMS_PORT = "5696"
     KMS_KEY_FILE = os.path.join(Misc.APP_ROOT, "deploy/client_new_key.pem")
     KMS_CLIENT_CERTFILE = os.path.join(Misc.APP_ROOT, "deploy/client_cert.crt")
@@ -62,18 +62,18 @@ class Kms(object):
     KMS_SUPPRESSED_RAGGED_EOFS = True
 
 class Dev(object):
-    DB_HOST = 'localhost'
-    DB_USER = 'kmis_db_user'
-    DB_PASSWD = 'UnDetect@ble123!'
+    DB_HOST = ''
+    DB_USER = ''
+    DB_PASSWD = ''
     DB_CATALOG_NAME = 'kmis'
     KMIS_APP_PORT = 5000
     KMIS_APP_IP = 'localhost'
     DEBUG = True
 
 class Prod(object):
-    DB_HOST = 'localhost'
-    DB_USER = 'kmis_db_user'
-    DB_PASSWD = 'UnDetect@ble123!'
+    DB_HOST = ''
+    DB_USER = ''
+    DB_PASSWD = ''
     DB_CATALOG_NAME = 'kmis'
     KMIS_APP_PORT = 5000
     KMIS_APP_IP = 'localhost'
