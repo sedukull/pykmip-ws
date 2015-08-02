@@ -1,3 +1,15 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 #!/usr/bin/python
 
 """
@@ -90,6 +102,20 @@ class KmisDb(object):
                     return ret
             return None
 
+    def get_create_key_policy_check(self, app_id, algorithm, length):
+        with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
+            cur.execute('select app_key, create_key from `kmis`.`app_policies`')
+            for key_auth_row in cur.fetchall():
+                if key_auth_row["app_key"] == app_id and key_auth_row["create_key"] == 1:
+                    cur.execute('select algorithm, key_length from `kmis`.`key_algorithm_policies`')
+                    for policy_row in cur.fetchall():
+                        if policy_row["algorithm"] == algorithm and policy_row["key_length"] == length:
+                            cur.execute('select app_key, app_name from `kmis`.`app_users`')
+                            for app_rows in cur.fetchall():
+                                if app_rows["app_key"] == app_id:
+                                    return app_rows["app_name"]
+
+        return None
 
     def insert_app_cred(self, app_name):
         pass

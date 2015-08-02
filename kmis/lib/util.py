@@ -1,3 +1,16 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+
 """
 __Author__: Santhosh Kumar Edukulla
 __Version__: 1.0
@@ -22,6 +35,7 @@ import uuid
 import os
 import pwd
 import grp
+import time
 
 
 logger = KmisLog.getLogger()
@@ -60,6 +74,10 @@ def kmis_compress(inp_buf):
 def extract_request_information():
     remote_address = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     return remote_address
+
+
+def get_key_name(app_name):
+    return app_name + generate_hashed_str(app_name)[0:10] + str(time.time())
 
 
 def get_data_from_request():

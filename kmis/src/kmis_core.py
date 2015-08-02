@@ -1,3 +1,15 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 """
 __Author__ : Santhosh Kumar Edukulla
 __Version__: 1.0
@@ -9,6 +21,20 @@ from kmip.core.enums import ResultStatus
 from kmip.core.enums import NameType
 from kmip.core.attributes import Name
 from kmip.core.factories.credentials import CredentialFactory
+from kmip.core.enums import AttributeType
+from kmip.core.enums import CredentialType
+from kmip.core.enums import CryptographicAlgorithm
+from kmip.core.enums import CryptographicUsageMask
+from kmip.core.enums import ObjectType
+from kmip.core.enums import Operation
+from kmip.core.enums import ResultStatus
+from kmip.core.enums import NameType
+from kmip.demos import utils
+from kmip.core.factories.attributes import AttributeFactory
+from kmip.core.factories.credentials import CredentialFactory
+from kmip.core.attributes import Name
+from kmip.core.objects import TemplateAttribute
+from kmip.core.objects import Attribute
 from kmip.core.objects import Attribute
 from kmip.services.kmip_client import KMIPProxy
 from kmis.lib.kmis_enums import (
@@ -19,7 +45,8 @@ from kmis.src.templates.kmis_responses import (CertAttrResponse,
                                                KeyResponse,
                                                CertResponse,
                                                InvalidResponse,
-                                               CaCertResponse)
+                                               CaCertResponse,
+                                               CreateKeyResponse)
 from kmip.core.enums import KeyFormatType as KeyFormatTypeEnum
 from kmip.core.misc import KeyFormatType
 from kmis.config import (Kms)
@@ -28,6 +55,7 @@ from functools import wraps
 from kmis.lib.kmis_enums import (KmisKeyFormatType, KmisResponseDescriptions)
 from kmis.lib.kmis_logger import KmisLog
 from kmis.src.kmis_dal import KmisDb
+from kmis.lib.util import get_key_name
 
 logger = KmisLog.getLogger()
 
@@ -97,6 +125,12 @@ def get_key_format_type(key_out_type):
     key_format_type = KeyFormatType(format_type_enum)
     return key_format_type
 
+def get_key_with_id(client, credential, key_id, key_format_type):
+    kmip_result = client.get(
+            uuid=key_id,
+            credential=credential,
+            key_format_type=key_format_type)
+    return kmip_result
 
 @handle_app_error
 def get_key_proxy(app_id, key_name):
@@ -112,15 +146,16 @@ def get_key_proxy(app_id, key_name):
     (client, credential) = get_kmip_client()
     key_id = get_id(client, credential, key_name)
     if key_id:
-        kmip_result = client.get(
-            uuid=key_id,
-            credential=credential,
-            key_format_type=get_key_format_type(key_out_type))
         close_kmip_proxy(client)
+        key_format_type = get_key_format_type(key_out_type)
+        kmip_result = get_key_with_id(client, credential,key_id,key_format_type)
         res_obj.process_kmip_response(kmip_result)
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
                 KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, KmisResponseDescriptions.SUCCESS)
+        else:
+            return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_KEY)
     else:
         return res_obj(
             KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_KEY)
@@ -200,6 +235,9 @@ def get_ca_cert_proxy(app_id, ca_cert_name):
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
                 KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, KmisResponseDescriptions.SUCCESS)
+        else:
+            return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
     else:
         return res_obj(
             KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
@@ -228,6 +266,10 @@ def get_key_attr_proxy(app_id, key_name):
         if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
             return res_obj(
                 KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, KmisResponseDescriptions.SUCCESS)
+        else:
+            return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
+
     else:
         return res_obj(
             KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
@@ -258,3 +300,73 @@ def get_cert_attr_proxy(app_id, cert_name):
     else:
         return res_obj(
             KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_CERT)
+
+
+@handle_app_error
+def create_key_proxy(app_id, algorithm, length):
+    '''
+    :Desc: Proxy for creating key with a given algorithm and length.
+    :param app_id:
+    :param algorithm:
+    :param length:
+    :return: key object created on KMS
+    '''
+    res_obj = CreateKeyResponse()
+    object_type = ObjectType.SYMMETRIC_KEY
+    db_obj = KmisDb()
+    app_name = db_obj.get_create_key_policy_check(app_id, algorithm, length)
+    if not app_name:
+        logger.info(
+            "Policy check failed: " +
+            KmisResponseDescriptions.INVALID_ALGORITHM)
+        return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_ALGORITHM)
+    attribute_factory = AttributeFactory()
+    attribute_type = AttributeType.CRYPTOGRAPHIC_ALGORITHM
+    algorithm_enum = getattr(CryptographicAlgorithm, algorithm, None)
+    if algorithm_enum is None:
+        logger.info(KmisResponseDescriptions.INVALID_ALGORITHM)
+        return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.INVALID_ALGORITHM)
+
+    (client, credential) = get_kmip_client()
+    algorithm_obj = attribute_factory.create_attribute(attribute_type,
+                                                       algorithm_enum)
+    mask_flags = [CryptographicUsageMask.ENCRYPT,
+                  CryptographicUsageMask.DECRYPT]
+    attribute_type = AttributeType.CRYPTOGRAPHIC_USAGE_MASK
+    usage_mask = attribute_factory.create_attribute(attribute_type,
+                                                    mask_flags)
+    attribute_type = AttributeType.CRYPTOGRAPHIC_LENGTH
+    length_obj = attribute_factory.create_attribute(attribute_type,
+                                                    length)
+    name = Attribute.AttributeName('Name')
+    key_name = get_key_name(app_name)
+    name_value = Name.NameValue(key_name)
+    name_type = Name.NameType(NameType.UNINTERPRETED_TEXT_STRING)
+    value = Name(name_value=name_value, name_type=name_type)
+    name = Attribute(attribute_name=name, attribute_value=value)
+    attributes = [algorithm_obj, usage_mask, length_obj, name]
+    template_attribute = TemplateAttribute(attributes=attributes)
+    # Create the SYMMETRIC_KEY object
+    kmip_result = client.create(object_type, template_attribute,
+                                credential)
+    if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
+        logger.info(
+            'Key : {0} creation successful. UUID : {1}'.format(
+                key_name,
+                kmip_result.uuid.value))
+        close_kmip_proxy(client)
+        key_out_type = KmisKeyFormatType.PKCS_1
+        key_format_type = get_key_format_type(key_out_type)
+        kmip_result = get_key_with_id(client, credential, kmip_result.uuid.value,key_format_type)
+        res_obj.process_kmip_response(kmip_result)
+        if kmip_result and kmip_result.result_status.enum == ResultStatus.SUCCESS:
+            return res_obj(
+                KmisResponseCodes.SUCCESS, KmisResponseStatus.SUCCESS, KmisResponseDescriptions.SUCCESS)
+        else:
+            return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.KEY_CREATION_ERROR)
+    else:
+        return res_obj(
+            KmisResponseCodes.FAIL, KmisResponseStatus.FAIL, KmisResponseDescriptions.KEY_CREATION_ERROR)

@@ -1,3 +1,16 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+
 """
 __Author__:Santhosh Kumar Edukulla
 __Version__:1.0
@@ -28,6 +41,8 @@ class KmisResponseDescriptions(object):
     SUCCESS = "Successful retrieval of key or Cert"
     INVALID_KEY_CERT = "Invalid Key\Certificate name provided. Please check"
     OPERATION_FAILED = "Key\Cert Retrieval Operation Failed"
+    INVALID_ALGORITHM = "Invalid Algorithm Provided or not supported as per policy"
+    KEY_CREATION_ERROR = "Key Creation failed. Check the input arguments provided"
 
 
 class KmisVersion(object):

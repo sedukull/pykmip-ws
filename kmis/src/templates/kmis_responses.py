@@ -1,3 +1,16 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+
 """
 __Author__: Santhosh Kumar Edukulla
 __Desc__ : KMIS Server Response Information
@@ -45,7 +58,7 @@ class KmisResponse(object):
                 mimetype=self.response_type)
         print "===API Resposne===", api_resp
         self.set_default_header_sec_response(api_resp)
-        return api_resp
+        return api_resp, KmisResponseCodes.SUCCESS
 
     def set_default_header_sec_response(self, api_resp):
         api_resp.headers.add('Content-Security-Policy', "default-src 'self'")
@@ -195,3 +208,28 @@ class InvalidResponse(KmisResponse):
 
     def __init__(self):
         super(InvalidResponse, self).__init__()
+
+    def __call__(self, status_code, status_msg, status_desc):
+        self.set_default_response_status(status_code, status_msg, status_desc)
+        resp_js = json.dumps(self.response_dict)
+        api_resp = Response(
+            resp_js,
+            status=status_code,
+            mimetype=self.response_type)
+        self.set_default_header_sec_response(api_resp)
+        return api_resp
+
+
+class CreateKeyResponse(KmisResponse):
+
+    def __init__(self):
+        super(KmisResponse, self).__init__()
+
+    def process_kmip_response(self, kmip_server_resp):
+        # Display operation results
+        self.response_dict['result']['kmis_status'] = str(
+            kmip_server_resp.result_status.enum)
+        self.response_dict['result'].update(
+            log_secret(
+                kmip_server_resp.object_type.enum,
+                kmip_server_resp.secret))

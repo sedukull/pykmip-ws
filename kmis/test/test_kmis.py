@@ -1,3 +1,16 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+
 import MySQLdb
 from kmis.lib.util import generate_hashed_str
 from flask import request
@@ -56,9 +69,47 @@ def test_setup():
         print insert_sql
         print "success"
 
+    def test_app_kmis_certs():
+        insert_sql = "insert into kmis.app_certs(app_key,private_key_name,ca_cert_name, ssl_cert_name, format, active) " \
+                     "values('%s','%s','%s','%s','%s',1)" % (
+                         hashed_key,
+                         private_key,
+                         ca_cert,
+                         test_cert,
+                         cert_format)
+        cur.execute(insert_sql)
+        print insert_sql
+        print "success"
+
+    def test_app_policies():
+        insert_sql = "insert into kmis.app_policies(app_key, create_key, create_key_pair ) " \
+                     "values('%s',1,1)" % (
+                         hashed_key)
+        cur.execute(insert_sql)
+        print insert_sql
+        print "success"
+
+    def test_app_policies():
+        insert_sql = "insert into kmis.app_policies(app_key, create_key, create_key_pair ) " \
+                     "values('%s',1,1)" % (
+                         hashed_key)
+        cur.execute(insert_sql)
+        print insert_sql
+        print "success"
+
+    def test_algorithm_policies():
+        insert_sql = "insert into kmis.key_algorithm_policies(algorithm,key_length ) " \
+                     "values('%s','%s')" % (
+                         'AES', '128')
+        cur.execute(insert_sql)
+        print insert_sql
+        print "success"
+
     test_sql_kmis_app()
     test_app_kmis_key()
     test_app_kmis_certs()
+    test_app_policies()
+    test_algorithm_policies()
     db.commit()
     cur.close()
 
@@ -97,14 +148,22 @@ def test_key(key_name='sec-team-rsa'):
     auth = HTTPBasicAuth(hashed_key, signature)
     headers = {
         'Authorization': auth,
-        'Content-MD5': content - md5,
+        'Content-MD5': c,
         'Accept': 'application/json',
         'Content-Type': 'application/json'}
     r = requests.post(url, data=content, headers=headers)
     print r
 
 # Test Setup
-test_setup()
+# test_setup()
+
+
+def test_client():
+    from kmis.src.kmis_core import get_id, get_kmip_client, get_cert_proxy
+    get_kmip_client()
+
+test_client()
+
 
 # Test keys\certs
 # test_key()

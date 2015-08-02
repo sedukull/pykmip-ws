@@ -47,6 +47,18 @@ CREATE TABLE `kmis`.`app_keys`
    `active` TINYINT default 0
 )ENGINE = INNODB;
 
+CREATE TABLE `kmis`.`app_policies`
+(
+   `app_key` varchar(255) NOT NULL,
+   `create_key` TINYINT default 0,
+   `create_key_pair` TINYINT default 0
+)ENGINE = INNODB;
+
+CREATE TABLE `kmis`.`key_algorithm_policies`
+(
+   `algorithm` varchar(255) NOT NULL,
+   `key_length` INT NOT NULL,
+)ENGINE = INNODB;
 
 GRANT ALL PRIVILEGES ON kmis.* TO 'kmis_db_user'@'localhost' IDENTIFIED BY 'UnDetect@ble123!';
 
