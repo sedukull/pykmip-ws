@@ -1,7 +1,19 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 """
 __Author__:Santhosh
 __Version__:1.0
-__Desc__: Setup file for pykmip flask web service called as kis\kmis.
+__Desc__: Setup file for pykmip web service called as kis\kmis.
           Provides cryptographic key management facilities to applications.
           KIS\KMIS : Key Integration Service (or) Key Management Integration Service.
           Interface between KMS(Key Management Solution\Server) and enterprise applications

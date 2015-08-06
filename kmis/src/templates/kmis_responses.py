@@ -232,7 +232,7 @@ class CreateKeyResponse(KmisResponse):
             log_secret(
                 kmip_server_resp.object_type.enum,
                 kmip_server_resp.secret))
-    
+
 class CreateKeyPairResponse(KmisResponse):
 
     def __init__(self):
