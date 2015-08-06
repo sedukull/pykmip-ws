@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
 """
 __Author__ : Santhosh Kumar Edukulla
 __Version__ : 1.0
@@ -26,7 +27,8 @@ from kmis.src.kmis_core import (
     get_cert_proxy,
     get_cert_attr_proxy,
     get_ca_cert_proxy,
-    get_create_key_proxy
+    create_key_proxy,
+    handle_policy
 )
 from kmis.src.templates.kmis_responses import (CertAttrResponse,
                                                KeyAttrResponse,
@@ -38,50 +40,29 @@ from kmis.src.templates.kmis_responses import (CertAttrResponse,
 from kmis.lib.kmis_enums import (
     KmisResponseStatus,
     KmisResponseCodes,
-    KmisResponseDescriptions)
-import re
+    KmisResponseDescriptions,
+    KmisOperations)
 from kmis.lib.kmis_logger import KmisLog
 
 
-kmis_view = Blueprint('kmis_view_v1', __name__)
+kmis_view = Blueprint('kmis_view_v2', __name__)
 logger = KmisLog.getLogger()
-
-
-def handle_policy(inp, inp_lst):
-    invalid_resp_obj = InvalidResponse()
-    if inp:
-        invalid_resp_obj(KmisResponseStatus.FAIL, KmisResponseStatus.FAIL, inp)
-        return invalid_resp_obj
-    for inp_name in inp_lst:
-        if not inp_name:
-            p = re.compile('[A-Za-z0-9_]')
-            if not p.search().group():
-                invalid_resp_obj(
-                    KmisResponseStatus.ERROR,
-                    KmisResponseStatus.ERROR,
-                    KmisResponseDescriptions.INVALID_KEY_CERT)
-                return invalid_resp_obj
-    return None
 
 
 @kmis_view.route("/key/", methods=('POST',))
 @verify_app_request
-def getKey(*args, **kwargs):
+def get_key(*args, **kwargs):
     try:
-        key_name = kwargs.get('jdata').get('key_name', None)
-        ret = handle_policy(
-            kwargs.get(
-                'invalid_response',
-                None),
-            [key_name])
-        if not ret:
-            app_id = kwargs.get('app_id')
-            final_res = get_key_proxy(app_id, key_name)
-            logger.debug(
+        ret = handle_policy(KmisOperations.GET_KEY, kwargs)
+        if ret.get('invalid_resp', None):
+            return ret['invalid_resp']
+        key_name = ret.get('key_name',None)
+        key_format = ret.get('key_format', None)
+        final_res = get_key_proxy(key_name, key_format)
+        logger.debug(
                 "==== Key : %s retrieval successful ====" %
                 str(key_name))
-            return final_res
-        return ret
+        return final_res
     except Exception as ex:
         logger.error("==== Key Retrieval Failed ====")
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
@@ -89,114 +70,89 @@ def getKey(*args, **kwargs):
 
 @kmis_view.route("/key/attributes/", methods=('POST',))
 @verify_app_request
-def getKeyAttributes(*args, **kwargs):
+def get_key_attributes(*args, **kwargs):
     try:
-        key_name = kwargs.get('jdata').get('key_name', None)
-        ret = handle_policy(
-            kwargs.get(
-                'invalid_response',
-                None),
-            [key_name])
-        if not ret:
-            app_id = kwargs.get('app_id')
-            final_res = get_key_attr_proxy(app_id, key_name)
-            logger.debug(
+        ret = handle_policy(KmisOperations.GET_KEY_ATTRIBUTES, kwargs)
+        if ret.get('invalid_resp', None):
+            return ret['invalid_resp']
+        key_name = ret.get("key_name", None)
+        final_res = get_key_attr_proxy(key_name)
+        logger.debug(
                 "==== Key : %s attribute retrieval successful ====" %
                 str(key_name))
-            return final_res
-        return ret
+        return final_res
     except Exception as ex:
         logger.error(
             "==== Key : %s attribute retrieval failed ====" %
-            str(key_name))
+            str(ex))
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
 @kmis_view.route("/cert/", methods=('POST',))
 @verify_app_request
-def getCertificate(*args, **kwargs):
+def get_certificate(*args, **kwargs):
     try:
-        cert_name = kwargs.get('jdata').get('cert_name', None)
-        ret = handle_policy(
-            kwargs.get(
-                'invalid_response',
-                None),
-            [cert_name])
-        if not ret:
-            app_id = kwargs.get('app_id')
-            final_res = get_cert_proxy(app_id, cert_name)
-            logger.debug(
+        ret = handle_policy(KmisOperations.GET_CERTIFICATE, kwargs)
+        if ret.get('invalid_resp', None):
+            return ret['invalid_resp']
+        final_res = get_cert_proxy(ret['cert_name'], ret['cert_out_type'], ret['ca_cert_name'], ret['private_key_name'], ret['key_out_type'])
+        logger.debug(
                 "==== Cert : %s retrieval successful ====" %
-                str(cert_name))
-            return final_res
-        return ret
+                str(ret['cert_name']))
+        return final_res
     except Exception as ex:
-        logger.error("==== Cert : %s retrieval failed ====" % str(cert_name))
+        logger.error("==== Cert : retrieval failed :%s===="%str(ex))
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
 @kmis_view.route("/cacert/", methods=('POST',))
 @verify_app_request
-def getCACertificate(*args, **kwargs):
+def get_ca_certificate(*args, **kwargs):
     try:
-        cert_name = kwargs.get('jdata').get('cert_name', None)
-        ret = handle_policy(
-            kwargs.get(
-                'invalid_response',
-                None),
-            [cert_name])
-        if not ret:
-            app_id = kwargs.get('app_id')
-            final_res = get_ca_cert_proxy(app_id, cert_name)
-            logger.debug(
+        ret = handle_policy(KmisOperations.GET_CA_CERT, kwargs)
+        if ret.get('invalid_resp', None):
+            return ret['invalid_resp']
+        cert_name = ret.get("cert_name", None)
+        cert_out_type = ret.get("cert_out_type", None)
+        final_res = get_ca_cert_proxy(cert_name, cert_out_type)
+        logger.debug(
                 "====CA Cert : %s retrieval successful ====" %
                 str(cert_name))
-            return final_res
-        return ret
+        return final_res
     except Exception as ex:
-        logger.error("====CA Cert : %s retrieval failed ====" % str(cert_name))
+        logger.error("====CA Cert : %s retrieval failed ====" % str(ex))
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
 @kmis_view.route("/cert/attributes/", methods=('POST',))
 @verify_app_request
-def getCertificateAttributes(*args, **kwargs):
+def get_certificate_attributes(*args, **kwargs):
     try:
-        cert_name = kwargs.get('jdata').get('cert_name', None)
-        ret = handle_policy(
-            kwargs.get(
-                'invalid_response',
-                None),
-            [cert_name])
-        if not ret:
-            app_id = kwargs.get('app_id')
-            final_res = get_cert_attr_proxy(app_id, cert_name)
-            logger.debug(
+        ret = handle_policy(KmisOperations.GET_CERTIFICATE_ATTRIBUTES, kwargs)
+        if ret.get('invalid_resp', None):
+            return ret['invalid_resp']
+        final_res = get_cert_attr_proxy(ret['cert_name'], ret['cert_out_type'])
+        logger.debug(
                 "==== Cert : %s attr retrieval successful ====" %
-                str(cert_name))
-            return final_res
-        return ret
+                str(ret['cert_name']))
+        return final_res
     except Exception as ex:
         logger.error(
-            "==== Cert : %s attr retrieval failed ====" %
-            str(cert_name))
+            "==== Cert : attributes retrieval failed :%s===="%str(ex))
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
 @kmis_view.route("/cert/status/", methods=('POST',))
 @verify_app_request
-def getCertStatus(*args, **kwargs):
+def get_cert_status(*args, **kwargs):
     try:
-        cert_name = kwargs.get('jdata').get('cert_name', None)
-        ret = handle_policy(
-            kwargs.get(
-                'invalid_response',
-                None),
-            [cert_name])
-        if not ret:
-            app_id = kwargs.get('app_id')
-            return "Active", 200
-        return ret
+        ret = handle_policy(KmisOperations.GET_CERTIFICATE_STATUS, kwargs)
+        if ret.get('invalid_resp', None):
+            return ret['invalid_resp']
+        cert_name = ret.get('cert_name', None)
+        cert_format = ret.get('cert_format', None)
+        final_res = get_cert_status(cert_name, cert_format)
+        return final_res
     except Exception as ex:
         logger.error(
             "==== Cert : %s Status retrieval failed ====" %
@@ -206,12 +162,15 @@ def getCertStatus(*args, **kwargs):
 
 @kmis_view.route("/key/status/", methods=('POST',))
 @verify_app_request
-def getKeyStatus(*args, **kwargs):
+def get_key_status(*args, **kwargs):
     try:
-        key_name = kwargs.get('jdata').get('key_name', None)
-        handle_policy(kwargs.get('invalid_response', None), key_name)
-        app_id = kwargs.get('app_id')
-        return "Active", 200
+        ret = handle_policy(KmisOperations.GET_KEY_STATUS, kwargs)
+        if ret.get('invalid_resp', None):
+            return ret['invalid_resp']
+        key_name = ret.get('key_name', None)
+        key_format_type = ret.get("key_format", None)
+        final_res = get_key_status(key_name, key_format_type)
+        return final_res
     except Exception as ex:
         logger.error(
             "==== Key : %s Status retrieval failed ====" %
@@ -223,27 +182,24 @@ def getKeyStatus(*args, **kwargs):
 @verify_app_request
 def register(*args, **kwargs):
     try:
-        ret = handle_policy(kwargs.get('invalid_response'))
-        if not ret:
-            return "Active", 200
+        ret = handle_policy(KmisOperations.REGISTER, kwargs)
+        if ret.get('invalid_resp', None):
+            return ret['invalid_resp']
         return ret
     except Exception as ex:
         logger.error(
-            "==== ListAll : %s Status retrieval failed ====" %
+            "==== register : %s failed ====" %
             str(ex))
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
 @kmis_view.route("/listall/status/", methods=('POST',))
 @verify_app_request
-def listAll(*args, **kwargs):
+def list_all(*args, **kwargs):
     try:
-        ret = handle_policy(kwargs.get('invalid_response'))
-        if not ret:
-            # For Each Key,Cert, build a response structure with name, start date, end date, issuer information, common name,archival date, expirty date
-            # Get all Keys/Certs
-            # return the structure
-            return "Active", 200
+        ret = handle_policy(KmisOperations.LIST_ALL, kwargs)
+        if ret.get('invalid_resp', None):
+            return ret['invalid_resp']
         return ret
     except Exception as ex:
         logger.error(
@@ -253,38 +209,34 @@ def listAll(*args, **kwargs):
 
 @kmis_view.route("/create/key/", methods=('POST',))
 @verify_app_request
-def createKey(*args, **kwargs):
+def create_key(*args, **kwargs):
     try:
-        algorithm = kwargs.get('jdata').get('algorithm', None)
-        length = kwargs.get('jdata').get('length', None)
-        ret = handle_policy(
-            kwargs.get(
-                'invalid_response',
-                None),
-            [algorithm, length])
-        if not ret:
-            app_id = kwargs.get('app_id')
-            final_res = get_create_key_proxy(app_id, algorithm, length)
-            logger.debug(
+        ret = handle_policy(KmisOperations.CREATE_KEY, kwargs)
+        if ret.get('invalid_resp', None):
+            return ret['invalid_resp']
+        app_name = ret.get('app_name', None)
+        algorithm = ret.get('algorithm', None)
+        length = ret.get('length', None)
+        final_res = create_key_proxy(app_name, algorithm, length)
+        logger.debug(
                 "==== Create Key : Successful ====")
-            return final_res
-        return ret
+        return final_res
     except Exception as ex:
         logger.error(
-            "==== createKey : %s Status retrieval failed ====" % str(ex))
+            "==== createKey : %s operation failed ====" % str(ex))
         return KmisResponseStatus.ERROR, KmisResponseCodes.SERVER_ERROR
 
 
 @kmis_view.route("/create/keypair/", methods=('POST',))
 @verify_app_request
-def createKeyPair(*args, **kwargs):
+def create_key_pair(*args, **kwargs):
     try:
-        ret = handle_policy(kwargs.get('invalid_response'))
-        if not ret:
-            # For Each Key,Cert, build a response structure with name, start date, end date, issuer information, common name,archival date, expirty date
-            # Get all Keys/Certs
-            # return the structure
-            return "Active", 200
+        ret = handle_policy(KmisOperations.CREATE_KEY_PAIR, kwargs)
+        if ret.get('invalid_resp', None):
+            return ret['invalid_resp']
+        # For Each Key,Cert, build a response structure with name, start date, end date, issuer information, common name,archival date, expirty date
+        # Get all Keys/Certs
+        # return the structure
         return ret
     except Exception as ex:
         logger.error(

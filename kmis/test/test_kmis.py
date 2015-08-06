@@ -13,7 +13,6 @@
 
 import MySQLdb
 from kmis.lib.util import generate_hashed_str
-from flask import request
 from kmis.lib.util import sign
 
 user_api_key = 'san'
@@ -41,7 +40,7 @@ def test_setup():
 
     cur = db.cursor()
 
-    def test_sql_kmis_app():
+    def test_app_kmis_users():
         insert_sql = "insert into kmis.app_users( app_key, app_pass_phrase, app_name, app_desc, app_ip, app_fqdn, active) " \
                      "values('%s', '%s', '%s', '%s','%s','ggg',1)" % (
                          hashed_key, hashed_pwd, app_name, desc, app_ip)
@@ -50,7 +49,7 @@ def test_setup():
         cur.execute(insert_sql)
         print "success"
 
-    def test_app_kmis_key():
+    def test_app_kmis_keys():
         insert_sql = "insert into kmis.app_keys(app_key, key_name, format,active) values ('%s','%s','%s',1)" % (
             hashed_key, test_key, key_format)
         cur.execute(insert_sql)
@@ -69,26 +68,6 @@ def test_setup():
         print insert_sql
         print "success"
 
-    def test_app_kmis_certs():
-        insert_sql = "insert into kmis.app_certs(app_key,private_key_name,ca_cert_name, ssl_cert_name, format, active) " \
-                     "values('%s','%s','%s','%s','%s',1)" % (
-                         hashed_key,
-                         private_key,
-                         ca_cert,
-                         test_cert,
-                         cert_format)
-        cur.execute(insert_sql)
-        print insert_sql
-        print "success"
-
-    def test_app_policies():
-        insert_sql = "insert into kmis.app_policies(app_key, create_key, create_key_pair ) " \
-                     "values('%s',1,1)" % (
-                         hashed_key)
-        cur.execute(insert_sql)
-        print insert_sql
-        print "success"
-
     def test_app_policies():
         insert_sql = "insert into kmis.app_policies(app_key, create_key, create_key_pair ) " \
                      "values('%s',1,1)" % (
@@ -98,15 +77,15 @@ def test_setup():
         print "success"
 
     def test_algorithm_policies():
-        insert_sql = "insert into kmis.key_algorithm_policies(algorithm,key_length ) " \
-                     "values('%s','%s')" % (
+        insert_sql = "insert into kmis.key_algorithm_policies(algorithm,key_length, active ) " \
+                     "values('%s','%s', 1)" % (
                          'AES', '128')
         cur.execute(insert_sql)
         print insert_sql
         print "success"
 
-    test_sql_kmis_app()
-    test_app_kmis_key()
+    test_app_kmis_users()
+    test_app_kmis_keys()
     test_app_kmis_certs()
     test_app_policies()
     test_algorithm_policies()
@@ -155,14 +134,14 @@ def test_key(key_name='sec-team-rsa'):
     print r
 
 # Test Setup
-# test_setup()
+test_setup()
 
 
 def test_client():
     from kmis.src.kmis_core import get_id, get_kmip_client, get_cert_proxy
     get_kmip_client()
 
-test_client()
+#test_client()
 
 
 # Test keys\certs

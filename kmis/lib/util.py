@@ -24,18 +24,19 @@ import hmac
 import hashlib
 import base64
 import binascii
-from kmip.core.enums import ObjectType
-from kmis.src.kmis_dal import KmisDb
-from kmis.config import Misc
-from kmis.lib.kmis_logger import KmisLog
-from kmis.lib.kmis_enums import KmisResponseTypes
 import json
-from pyminizip import compress
+import re
 import uuid
 import os
 import pwd
 import grp
 import time
+from kmip.core.enums import ObjectType
+from kmis.src.kmis_dal import KmisDb
+from kmis.config import Misc
+from kmis.lib.kmis_logger import KmisLog
+from kmis.lib.kmis_enums import KmisResponseTypes
+from pyminizip import compress
 
 
 logger = KmisLog.getLogger()
@@ -77,7 +78,9 @@ def extract_request_information():
 
 
 def get_key_name(app_name):
-    return app_name + generate_hashed_str(app_name)[0:10] + str(time.time())
+    temp_str = str(generate_hashed_str(app_name)[0:10] + str(time.time()))
+    temp_str = temp_str.replace('.', '_')
+    return app_name + '_' + (temp_str)
 
 
 def get_data_from_request():
@@ -94,20 +97,18 @@ def check_auth(src, api_key, signature):
     if API Key or Signature sent as part of request is valid.
     """
     try:
-        return True
-        # Stub to decrypt(api_key, signature)
         db_obj = KmisDb()
         b64_dec_app_key = base64.b64decode(api_key)
         b64_dec_signature = base64.b64decode(signature)
         hashed_api_key = generate_hashed_str(b64_dec_app_key)
-        app_secret = db_obj.get_app_secret(src, hashed_api_key)
+        (app_secret, app_name) = base64.b64decode(db_obj.get_app_info(src, hashed_api_key))
         if app_secret:
             string_to_sign = str(request.url) + \
                 str(request.method) + str(request.headers.get("Content-Type")) + \
                 str(request.headers.get("Content-MD5")) + str(request.data)
             calculated_signature = sign(string_to_sign, app_secret)
             if calculated_signature == b64_dec_signature:
-                return hashed_api_key
+                return (hashed_api_key, app_name)
         return False
     except Exception as e:
         logger.error(
@@ -132,11 +133,19 @@ def get_auth_details():
     app_secret = auth.password
     return app_key, app_secret
 
+def verify_valid_name(inp_name):
+    if not inp_name:
+        p = re.compile('[A-Za-z0-9_]')
+        if not p.search().group():
+            return True
+    return False
 
 def verify_app_request(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
-        invalid_resp = True
+        invalid_resp_msg = None
+        jdata = None
+        ret = None
         remote_address = extract_request_information()
         logger.debug(
             " === Input Request :%s == IP : %s : ==== " %
@@ -145,19 +154,18 @@ def verify_app_request(func):
                 str(remote_address)))
         app_key, app_secret = get_auth_details()
         if (not app_key) or (not app_secret):
-            ret = check_auth(remote_address, app_key, app_secret)
+            (hashed_app_key, app_name) = check_auth(remote_address, app_key, app_secret)
             if ret is False:
                 invalid_resp_msg = "Kmis Authentication Failed. Please check the API Key or Signature"
-        else:
-            jdata = get_data_from_request()
-        if jdata is False:
-            invalid_resp_msg = "Invalid Input Json Data. Please Check"
-        if invalid_resp:
-            kwargs['invalid_response'] = invalid_resp_msg
-        else:
-            kwargs['app_id'] = ret
-            kwargs['jdata'] = jdata
-            return func(*args, **kwargs)
+            else:
+                jdata = get_data_from_request()
+                if jdata is False:
+                    invalid_resp_msg = "Invalid Input Json Data for the operation, Please Check"
+        kwargs['invalid_response'] = invalid_resp_msg
+        kwargs['hashed_app_key'] = hashed_app_key
+        kwargs['app_name'] = app_name
+        kwargs['jdata'] = jdata
+        return func(*args, **kwargs)
     return decorated_function
 
 
@@ -189,6 +197,8 @@ def log_secret(secret_type, secret_value):
         return log_private_key(secret_value)
     elif secret_type is ObjectType.PUBLIC_KEY:
         return log_public_key(secret_value)
+    elif secret_type is ObjectType.SYMMETRIC_KEY:
+        return log_private_key(secret_value)
     else:
         logger.info('generic secret: {0}'.format(secret_value))
 

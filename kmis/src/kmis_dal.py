@@ -45,7 +45,10 @@ class KmisDb(object):
         if self.db:
             self.db.close()
 
-    def get_api_secret(self, src, hashed_api_key):
+    '''
+    Verifies whether the hashed api key is present and then return app passphrase and name
+    '''
+    def get_app_info(self, src, hashed_api_key):
         with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
             cur.execute(
                 'select app_ip, app_key, app_pass_phrase, active from `kmis`.`app_users`')
@@ -53,13 +56,16 @@ class KmisDb(object):
                 if (row["app_key"] == hashed_api_key) and (
                             1 == int(row["active"])):
                     if Misc.VERIFY_SRC and (src == row["app_ip"]):
-                        return row["app_pass_phrase"]
+                        return row["app_pass_phrase"], row["app_name"]
                     if Misc.VERIFY_SRC:
                         return None
-                    return row["app_pass_phrase"]
+                    return row["app_pass_phrase"], row["app_name"]
             return None
 
 
+    '''
+    Verify whether the application has retrieval access to the key, if yes return format
+    '''
     def verify_and_get_app_key_info(self, app_id, key_name):
         with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
             cur.execute(
@@ -69,29 +75,25 @@ class KmisDb(object):
                     return row['format']
             return None
 
+    '''
+    Verify whether the application has retrieval access to the certificate, if yes return format
+    '''
     def verify_and_get_app_cert_info(self, app_id, cert_name):
         ret = {}
         with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
             cur.execute('select app_key, private_key_name, ca_cert_name, ssl_cert_name, format, active from `kmis`.`app_certs`')
             for row in cur.fetchall():
                 if row['app_key'] == app_id and row['ssl_cert_name'] == cert_name and row['active'] == 1:
-                    ret['format'] = row['format']
+                    ret['cert_format'] = row['format']
                     ret['ca_cert_name'] = row['ca_cert_name']
                     ret['private_key_name'] = row['private_key_name']
                     return ret
             return None
 
-    def verify_app_cred(self, src, app_hashed_key, app_hashed_password):
-        with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
-            cur.execute(
-                'select app_key, app_pass_phrase, active from `kmis`.`app_users`')
-        for row in cur.fetchall():
-            print "====", str(row)
-            if (src == row["app_ip"]) and (app_hashed_key == row["app_key"]) and (
-                        app_hashed_password == row["app_pass_phrase"]) and (1 == int(row["active"])):
-                return True
-        return False
 
+    '''
+    Verify whether the application has retrieval access to the ca certificate, if yes return format
+    '''
     def verify_and_get_app_ca_cert_info(self, app_id, ca_cert_name):
         ret = {}
         with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
@@ -102,20 +104,40 @@ class KmisDb(object):
                     return ret
             return None
 
-    def get_create_key_policy_check(self, app_id, algorithm, length):
+    '''
+    Verifies whether the application has key creation role or not
+    '''
+    def verify_app_create_policy(self, app_id):
         with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
             cur.execute('select app_key, create_key from `kmis`.`app_policies`')
             for key_auth_row in cur.fetchall():
                 if key_auth_row["app_key"] == app_id and key_auth_row["create_key"] == 1:
-                    cur.execute('select algorithm, key_length from `kmis`.`key_algorithm_policies`')
-                    for policy_row in cur.fetchall():
-                        if policy_row["algorithm"] == algorithm and policy_row["key_length"] == length:
-                            cur.execute('select app_key, app_name from `kmis`.`app_users`')
-                            for app_rows in cur.fetchall():
-                                if app_rows["app_key"] == app_id:
-                                    return app_rows["app_name"]
+                    return True
+        return False
 
+    '''
+    Verifies the algorithm, length policy information for keys.
+    '''
+    def verify_key_algorithm_policy(self, algorithm, length):
+        with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
+            cur.execute('select algorithm, key_length, active from `kmis`.`key_algorithm_policies`')
+            for policy_row in cur.fetchall():
+                if policy_row["algorithm"] == algorithm and policy_row["key_length"] == length and policy_row['active'] == 1:
+                    return True
+        return False
+
+    '''
+    Retrieves the application name for a given application with key
+    '''
+    def get_app_name(self, app_key):
+        with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
+            cur.execute('select app_key, app_name from `kmis`.`app_users`')
+            for app_rows in cur.fetchall():
+                if app_rows["app_key"] == app_key:
+                    return app_rows["app_name"]
         return None
 
-    def insert_app_cred(self, app_name):
-        pass
+    def insert_key_info(self, app_key, key_name, format, active):
+        with closing(self.db.cursor(MySQLdb.cursors.DictCursor)) as cur:
+            cur.execute('insert into `kmis`.`app_users`(app_key,key_name,format,active) values(%s,%s,%s,%s)'%str(app_key),str(key_name),str(format),str(active))
+        return None

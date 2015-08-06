@@ -43,6 +43,7 @@ class KmisResponseDescriptions(object):
     OPERATION_FAILED = "Key\Cert Retrieval Operation Failed"
     INVALID_ALGORITHM = "Invalid Algorithm Provided or not supported as per policy"
     KEY_CREATION_ERROR = "Key Creation failed. Check the input arguments provided"
+    APP_POLICY_FAILED = "Policy Check Failed : App does not have key creation or retrieval capability"
 
 
 class KmisVersion(object):
@@ -54,4 +55,17 @@ class KmisKeyFormatType(object):
     PKCS_1 = 'PKCS_1'
     PKCS_8 = 'PKCS_8'
     X_509 = 'X_509'
-    RAW = 'RAW'
+    RAW = 'Raw'
+
+class KmisOperations(object):
+    GET_KEY = "get_key"
+    GET_KEY_ATTRIBUTES = "get_key_attributes"
+    GET_KEY_STATUS = "get_key_status"
+    GET_CERTIFICATE = "get_certificate"
+    GET_CERTIFICATE_ATTRIBUTES = "get_certificate_attributes"
+    GET_CERTIFICATE_STATUS = "get_cert_status"
+    GET_CA_CERT = "get_ca_certificate"
+    LIST_ALL = "list_all"
+    CREATE_KEY = "create_key"
+    CREATE_KEY_PAIR = "create_key_pair"
+    REGISTER = "register"
